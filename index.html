@@ -463,7 +463,9 @@ label.fld em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:
     </div>
   </details>
   <div class="nav">
+    <span class="small" id="fSala"></span>
     <div class="spacer"></div>
+    <button class="btn ghost" id="fVaciar">Vaciar la sala</button>
     <button class="btn ghost" id="fCsv">Descargar CSV</button>
   </div>
   <div class="stat" id="fStat"></div>
@@ -1426,8 +1428,20 @@ $("#fRead").onclick = ()=>{
   toast(msg);
 };
 $("#fReset").onclick = ()=>{
-  if(!confirm("¿Borrar todo lo consolidado?")) return;
+  if(!confirm("¿Borrar lo consolidado en ESTA pantalla? La sala compartida no se toca.")) return;
   F={votes:[],cartas:[],sobreOpen:false,sobre:F.sobre,debate:[]}; save("fac",F); renderFac();
+};
+/* Vaciar la sala: borra los votos y las cartas en la base, para todos.
+   Es lo que se hace entre un ensayo y el taller de verdad. */
+$("#fVaciar").onclick = async ()=>{
+  if(!haySync){ toast("No hay sala: esta pantalla trabaja sola"); return; }
+  if(!confirm("Esto borra los tableros y las cartas de la sala «"+sala+"» para TODOS los dispositivos.\n\n"+
+              "Úselo entre un ensayo y la sesión de verdad, nunca en medio del taller. ¿Seguir?")) return;
+  const okV = await subir("/votos", null);
+  const okC = await subir("/cartas", null);
+  F={votes:[],cartas:[],sobreOpen:false,sobre:F.sobre,debate:[]}; save("fac",F); renderFac();
+  toast((okV&&okC) ? "Sala «"+sala+"» vacía"
+                   : "No se pudo borrar en la base. Revise las reglas de Firebase.");
 };
 $("#btnSobre").onclick = ()=>{ F.sobreOpen=true; save("fac",F); renderFac(); };
 $("#sobreDemo").onclick = ()=>{
@@ -1481,6 +1495,7 @@ $$(".tab").forEach(t=>t.onclick=()=>{
 /* arranque */
 show("vHome");
 if(!haySync){ document.querySelectorAll(".neti").forEach(n=>n.classList.add("oculto"));
+  const bv=$("#fVaciar"); if(bv) bv.classList.add("hide");
   ["#mVMan","#fMan"].forEach(sel=>{ const mv=$(sel); if(mv){ mv.open=true; const sm=mv.querySelector("summary"); if(sm) sm.remove(); } });
 }
 else {
@@ -1498,6 +1513,7 @@ else {
     mVTit: "Los tableros de esta mesa",
     mVLead: "Van apareciendo solos, apenas cada quien presiona Enviar. Cuando estén todos, empiecen las cartas: van a ver, casilla por casilla, qué puso cada quien antes de acordar la nota.",
     fLead: "El mapa se arma solo con lo que van enviando las personas y las mesas: no hay que pegar nada. Proyecte esta pantalla y déjela abierta.",
+    fSala: "Sala: " + sala + "  ·  todos los dispositivos tienen que estar en la misma",
     mOutLbl: "Bloque de respaldo — solo hace falta si se cae la conexión",
     tl1: "Todos entran en «Voy a votar», eligen su territorio y puntúan doce casillas de 1 a 5. Al terminar presionan Enviar y su tablero le llega solo a su mesa.",
     tl2: "Un dispositivo por mesa ve los tableros de sus integrantes ya cargados y escribe seis cartas. Se guardan solas: no hay que mandar nada.",
