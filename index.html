@@ -20,6 +20,9 @@
   /* semánticos: separados del acento de marca */
   --v:#4E8C3F; --vb:#E7F1DC; --a:#B57A08; --ab:#FBEEd0;
   --r:#C0392B; --rb:#F8DED9; --g:#6B7A8A; --gb:#E6EAEF;
+  /* rampa de la escala 1–5: intensidad, no semáforo */
+  --e1:#EDF2F5; --e2:#CFDFE8; --e3:#A6C3D3; --e4:#5F92AC; --e5:#2C6382;
+  --eb:#8FB0C2; --et1:#26485C;
   --sans:"IBM Plex Sans","Segoe UI",-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;
   --disp:"Jost","Century Gothic","Futura","Segoe UI",Helvetica,Arial,sans-serif;
   --radius:10px;
@@ -42,9 +45,9 @@ p{margin:0 0 12px}
 
 header.top{border-bottom:1px solid var(--line);background:var(--white);position:sticky;top:0;z-index:30}
 header.top{border-top:4px solid var(--orange)}
-header.top .inner{max-width:1180px;margin:0 auto;padding:9px 16px;display:flex;gap:14px;align-items:center}
-.logo{display:block;height:30px;width:auto;flex:none}
-.logo.lnrc{height:20px}
+header.top .inner{max-width:1180px;margin:0 auto;padding:11px 16px;display:flex;gap:16px;align-items:center}
+.logo{display:block;height:42px;width:auto;flex:none}
+.logo.lnrc{height:28px}
 .hspacer{flex:1}
 .neti{font-size:11px;font-weight:700;letter-spacing:.03em;border-radius:999px;padding:3px 10px;white-space:nowrap}
 .neti.on{background:#E7F1DC;color:#3E7233}
@@ -54,7 +57,12 @@ header.top .inner{max-width:1180px;margin:0 auto;padding:9px 16px;display:flex;g
 .neti.oculto{display:none}
 .brand{font-family:var(--disp);font-weight:700;font-size:15px;letter-spacing:-.005em;line-height:1.15;padding-left:14px;border-left:1px solid var(--line)}
 .brand span{display:block;color:var(--mut);font-weight:500;font-size:11px;letter-spacing:.02em}
-@media (max-width:700px){ .brand span{display:none} .brand{font-size:13px;padding-left:10px} .logo{height:24px} .logo.lnrc{height:16px} }
+@media (max-width:760px){ .brand span{display:none} .brand{font-size:13px;padding-left:10px} .logo{height:30px} .logo.lnrc{height:21px}
+  header.top .inner{gap:10px;padding:9px 12px}
+  /* el indicador de red queda como punto: el color ya dice todo */
+  .neti{font-size:0;padding:4px 6px} .neti:before{font-size:13px} }
+@media (max-width:430px){ .brand{font-size:12px;padding-left:8px} .logo{height:26px} .logo.lnrc{height:18px}
+  #btnHome{font-size:13px} }
 .linkbtn{background:none;border:0;color:var(--teal);font:inherit;font-size:13px;font-weight:700;cursor:pointer;padding:6px 8px;border-radius:8px}
 .linkbtn:hover{background:var(--lgt)}
 
@@ -102,11 +110,17 @@ header.top .inner{max-width:1180px;margin:0 auto;padding:9px 16px;display:flex;g
 .opt{border:1.5px solid var(--line);background:#fff;border-radius:9px;padding:11px 4px;font-family:var(--disp);font-weight:700;font-size:16px;cursor:pointer;color:var(--ink);text-align:center;line-height:1.1}
 .opt small{display:block;font-size:9.5px;font-weight:700;letter-spacing:.03em;margin-top:3px;color:var(--mut);text-transform:uppercase}
 .opt[aria-pressed="true"] small{color:inherit;opacity:.85}
-.opt[data-v="V"][aria-pressed="true"]{background:var(--vb);border-color:var(--v);color:var(--v)}
-.opt[data-v="A"][aria-pressed="true"]{background:var(--ab);border-color:var(--a);color:var(--a)}
-.opt[data-v="R"][aria-pressed="true"]{background:var(--rb);border-color:var(--r);color:var(--r)}
+.opt[data-v="1"][aria-pressed="true"]{background:var(--e1);border-color:var(--eb);color:var(--et1)}
+.opt[data-v="2"][aria-pressed="true"]{background:var(--e2);border-color:var(--eb);color:var(--et1)}
+.opt[data-v="3"][aria-pressed="true"]{background:var(--e3);border-color:var(--eb);color:var(--et1)}
+.opt[data-v="4"][aria-pressed="true"]{background:var(--e4);border-color:var(--eb);color:#fff}
+.opt[data-v="5"][aria-pressed="true"]{background:var(--e5);border-color:var(--e5);color:#fff}
 .opt[data-v="G"][aria-pressed="true"]{background:var(--gb);border-color:var(--g);color:var(--g)}
 .opt[data-v="X"][aria-pressed="true"]{background:var(--gb);border-color:var(--g);color:var(--g);border-style:dashed}
+/* segunda fila: lo que está fuera de la escala */
+.opts.fuera{grid-template-columns:repeat(2,1fr);margin-top:7px}
+.opts.fuera .opt{min-height:auto;padding:8px 4px;font-size:13px;font-family:var(--sans);font-weight:700}
+.opts.fuera .opt small{margin-top:1px}
 
 .nav{display:flex;gap:10px;margin-top:18px;align-items:center;flex-wrap:wrap}
 .btn{border:0;border-radius:9px;padding:12px 20px;font-family:var(--disp);font-weight:600;font-size:15.5px;cursor:pointer;background:var(--navy);color:#fff}
@@ -128,12 +142,13 @@ td.k{background:var(--lgt);font-weight:600;white-space:nowrap}
 td{font-variant-numeric:tabular-nums}
 .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:var(--radius)}
 .pill{display:inline-block;min-width:30px;text-align:center;border-radius:6px;padding:3px 7px;font-weight:800;font-size:12.5px;border:1px solid transparent}
-.pV{background:var(--vb);color:var(--v);border-color:var(--v)}
-.pA{background:var(--ab);color:var(--a);border-color:var(--a)}
-.pR{background:var(--rb);color:var(--r);border-color:var(--r)}
+.p1{background:var(--e1);color:var(--et1);border-color:var(--eb)}
+.p2{background:var(--e2);color:var(--et1);border-color:var(--eb)}
+.p3{background:var(--e3);color:var(--et1);border-color:var(--eb)}
+.p4{background:var(--e4);color:#fff;border-color:var(--e4)}
+.p5{background:var(--e5);color:#fff;border-color:var(--e5)}
 .pG{background:var(--gb);color:var(--g);border-color:var(--g)}
 .pX{background:var(--gb);color:var(--g);border-color:var(--g);border-style:dashed}
-.pM{background:#E6F0F3;color:var(--teal);border-color:var(--teal)}
 .pSD{background:var(--gb);color:var(--g);border-color:var(--g)}
 .pnone{color:var(--mut)}
 td.cfill{text-align:center;padding:5px 6px}
@@ -255,7 +270,7 @@ label.fld em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:
 }
 .foot{margin-top:34px;padding-top:16px;border-top:1px solid var(--line);font-size:11.5px;color:var(--mut);max-width:78ch}
 .footlogos{display:flex;gap:20px;align-items:center;margin-bottom:10px;opacity:.85}
-.footlogos img{height:26px;width:auto} .footlogos img.lnrc{height:17px}
+.footlogos img{height:36px;width:auto} .footlogos img.lnrc{height:24px}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:22px;background:var(--navy);color:#fff;padding:11px 20px;border-radius:999px;font-size:14px;font-weight:700;z-index:99;box-shadow:0 6px 24px rgba(0,0,0,.24)}
 
 @media (max-width:560px){
@@ -305,7 +320,7 @@ label.fld em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:
     <button class="role" data-go="mesa" style="--rc:var(--crimson)">
       <div class="num">2</div>
       <b>Soy una mesa</b>
-      <em id="hRol2">Recojo los códigos de mi mesa y escribo seis cartas: un color por sector, la razón y de dónde lo sé.</em>
+      <em id="hRol2">Recojo los códigos de mi mesa y escribo seis cartas: una nota por sector, la razón y de dónde lo sé.</em>
     </button>
     <button class="role" data-go="fac" style="--rc:var(--lime)">
       <div class="num">3</div>
@@ -322,7 +337,7 @@ label.fld em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:
     <summary>Cómo se corre la actividad, minuto a minuto</summary>
     <div class="tl">
       <div class="tlrow" style="--c:var(--steel)"><b>0–5</b><div><strong>Encuadre</strong><span>Se comparte el enlace por el chat. Se anuncian las mesas y sus territorios. Cada mesa nombra portavoz y escriba.</span></div></div>
-      <div class="tlrow" style="--c:var(--steel)"><b>5–12</b><div><strong>Cada quien, solo</strong><span id="tl1">Todos entran en «Voy a votar», eligen su territorio y pintan doce casillas. Al terminar le entregan su código a su mesa.</span></div></div>
+      <div class="tlrow" style="--c:var(--steel)"><b>5–12</b><div><strong>Cada quien, solo</strong><span id="tl1">Todos entran en «Voy a votar», eligen su territorio y puntúan doce casillas de 1 a 5. Al terminar le entregan su código a su mesa.</span></div></div>
       <div class="tlrow" style="--c:var(--crimson)"><b>12–28</b><div><strong>Mesas</strong><span id="tl2">Un dispositivo por mesa recoge los códigos de sus integrantes y escribe seis cartas. Al terminar, «Copiar mis cartas» y mandarlas a quien facilita.</span></div></div>
       <div class="tlrow" style="--c:var(--crimson)"><b>28–40</b><div><strong>Puesta en común</strong><span id="tl3">Quien facilita pega los tres bloques en «Consolidar» y proyecta el mapa. Cuatro minutos por mesa.</span></div></div>
       <div class="tlrow" style="--c:var(--orange)"><b>40–50</b><div><strong>Se abre el sobre</strong><span>Botón «Abrir el sobre». La pestaña de casillas calientes ya trae las candidatas ordenadas. Se discuten dos.</span></div></div>
@@ -340,7 +355,7 @@ label.fld em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:
   <div id="pTerr">
     <p class="lead">Valore únicamente el territorio en el que trabaja. Si trabaja en más de uno, escoja aquel del que más le consta.</p>
     <div class="chips" id="pTerrChips"></div>
-    <div class="notice"><b>Ojo:</b> en Putumayo no hubo alojamiento y en Cauca el proyecto no incluye WASH. Esas casillas se marcan <b>NA</b>, no rojo: es un hecho del diseño, no un vacío.</div>
+    <div class="notice"><b>Ojo:</b> en Putumayo no hubo alojamiento y en Cauca el proyecto no incluye WASH. Esas casillas se marcan <b>NA</b>, no 1: es un hecho del diseño, no una nota baja.</div>
     <div class="nav"><button class="btn" id="pStart" disabled>Empezar</button></div>
   </div>
 
@@ -370,7 +385,7 @@ label.fld em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:
   <div id="pDone" class="hide">
     <div class="entrega">
       <div class="epaso"><b>1</b><div><strong id="pE1t">Este es su tablero, en catorce letras</strong>
-        <span id="pE1s">No lleva su nombre: solo el territorio y los doce colores.</span></div></div>
+        <span id="pE1s">No lleva su nombre: solo el territorio y las doce notas.</span></div></div>
       <div class="code" id="pCodeOut"></div>
       <div class="epaso" id="pasoDos"><b>2</b><div><strong>Entrégueselo a su mesa</strong>
         <span>Si está en la sala, muestre esta pantalla a quien esté escribiendo en la mesa. Si está conectado, péguelo en el chat.</span></div></div>
@@ -397,7 +412,7 @@ label.fld em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:
 
   <div id="mVotos" class="hide">
     <h2 style="margin-top:2px" id="mVTit">¿Quiénes están en esta mesa?</h2>
-    <p class="lead" id="mVLead">Cada persona de la mesa acaba de llenar su tablero y tiene un código de catorce letras. Recójanlos aquí: van a ver, casilla por casilla, qué puso cada quien antes de acordar el color.</p>
+    <p class="lead" id="mVLead">Cada persona de la mesa acaba de llenar su tablero y tiene un código de catorce letras. Recójanlos aquí: van a ver, casilla por casilla, qué puso cada quien antes de acordar la nota.</p>
     <div id="mVList"></div>
     <details id="mVMan"><summary>Meter un código a mano</summary>
       <textarea id="mVIn" rows="3" placeholder="Escriban o peguen los códigos, uno por línea o separados por espacios…"></textarea>
@@ -409,7 +424,7 @@ label.fld em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:
   </div>
 
   <div id="mForm" class="hide">
-    <div class="notice"><b>La única regla dura:</b> una casilla con color y sin razón no entra al informe. El porqué puede ir compartido o separado por sector: ese botón está siempre en la carta, y si los dos colores les quedan distintos se separa solo — esa línea es la que más nos sirve.</div>
+    <div class="notice"><b>La única regla dura:</b> una casilla con nota y sin razón no entra al informe. El porqué puede ir compartido o separado por sector: ese botón está siempre en la carta, y si las dos notas les quedan lejos se separa solo — esa línea es la que más nos sirve.</div>
     <div id="mCards"></div>
     <div class="mbar">
       <span class="small" id="mCount"></span>
@@ -451,7 +466,7 @@ label.fld em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:
   </div>
 
   <div id="tabMapa">
-    <p class="small" style="margin-top:12px">Las dos primeras columnas de color son el voto individual de las personas de ese territorio, separado por bloque sectorial. «Mesa» es el color acordado con su razón escrita. «Sobre» aparece solo cuando usted lo abra.</p>
+    <p class="small" style="margin-top:12px">La escala va de <b>1 · bajo</b> a <b>5 · alto</b> en grado de cumplimiento. «Voto» es lo que puso cada persona sola; «Mesa» es lo que acordaron, con su razón escrita. «Nuestra lectura» aparece solo cuando usted abra el sobre.</p>
     <div class="scroll"><table id="fTable"></table></div>
   </div>
 
@@ -517,12 +532,16 @@ const SECT = [
   ["WASH y Alojamiento","agua, saneamiento e higiene · alojamiento y asentamientos"],
   ["Protección, ICLA y Educación","protección comunitaria · asesoría legal · educación en emergencias"]
 ];
-const VALS = [["V","Bien"],["A","A medias"],["R","No se cumplió"],["G","No me consta"],["X","No operó aquí"]];
-const VLBL = {V:"V",A:"A",R:"R",G:"G",X:"NA"};
-const PESO = {V:3,A:2,R:1,G:0,X:0};
+/* Escala de cinco pasos: grado de cumplimiento del criterio en ese sector.
+   G y NA quedan fuera de la escala: no son notas bajas, son ausencias. */
+const ESC  = [["1","Bajo"],["2","Medio bajo"],["3","Medio"],["4","Medio alto"],["5","Alto"]];
+const FUERA= [["G","No me consta"],["X","No operó aquí"]];
+const VALS = ESC.concat(FUERA);
+const VLBL = {"1":"1","2":"2","3":"3","4":"4","5":"5",G:"G",X:"NA"};
+const VNOM = Object.fromEntries(VALS);
+const PESO = {"1":1,"2":2,"3":3,"4":4,"5":5,G:0,X:0};
 const FUENTES = [["VI","Lo vi"],["CO","Me lo contaron"],["PR","Está en la presentación"],["CZ","Es mi corazonada"]];
 const FLBL = Object.fromEntries(FUENTES);
-const COLORS_MESA = [["V","V"],["A","A"],["R","R"],["M","MIXTO"]];
 
 /* Lectura provisional del equipo evaluador, codificada en base64.
    ── Si este repositorio es público y no quiere que se pueda leer antes del taller,
@@ -530,7 +549,7 @@ const COLORS_MESA = [["V","V"],["A","A"],["R","R"],["M","MIXTO"]];
 const SOBRE_B64 = "";
 /* Sobre de ENSAYO. Sirve para practicar la mecánica antes de tener la lectura
    definitiva: todas sus frases dicen [DEMO] y la app lo rotula en pantalla. */
-const SOBRE_DEMO = "eyJQZXJ0aW5lbmNpYXxQdXR1bWF5byI6IHsiYyI6ICJBIiwgInIiOiAiW0RFTU9dIFRleHRvIGRlIHBydWViYSwgbm8gZXMgdW5hIGxlY3R1cmEgcmVhbC4ifSwgIlBlcnRpbmVuY2lhfE5vcnRlIGRlIFNhbnRhbmRlciI6IHsiYyI6ICJWIiwgInIiOiAiW0RFTU9dIFRleHRvIGRlIHBydWViYSwgbm8gZXMgdW5hIGxlY3R1cmEgcmVhbC4ifSwgIlBlcnRpbmVuY2lhfENhdWNhIjogeyJjIjogIlYiLCAiciI6ICJbREVNT10gVGV4dG8gZGUgcHJ1ZWJhLCBubyBlcyB1bmEgbGVjdHVyYSByZWFsLiJ9LCAiQ29oZXJlbmNpYXxQdXR1bWF5byI6IHsiYyI6ICJSIiwgInIiOiAiW0RFTU9dIFRleHRvIGRlIHBydWViYSwgbm8gZXMgdW5hIGxlY3R1cmEgcmVhbC4ifSwgIkNvaGVyZW5jaWF8Tm9ydGUgZGUgU2FudGFuZGVyIjogeyJjIjogIkEiLCAiciI6ICJbREVNT10gVGV4dG8gZGUgcHJ1ZWJhLCBubyBlcyB1bmEgbGVjdHVyYSByZWFsLiJ9LCAiQ29oZXJlbmNpYXxDYXVjYSI6IHsiYyI6ICJWIiwgInIiOiAiW0RFTU9dIFRleHRvIGRlIHBydWViYSwgbm8gZXMgdW5hIGxlY3R1cmEgcmVhbC4ifSwgIkVmZWN0aXZpZGFkfFB1dHVtYXlvIjogeyJjIjogIkEiLCAiciI6ICJbREVNT10gVGV4dG8gZGUgcHJ1ZWJhLCBubyBlcyB1bmEgbGVjdHVyYSByZWFsLiJ9LCAiRWZlY3RpdmlkYWR8Tm9ydGUgZGUgU2FudGFuZGVyIjogeyJjIjogIkEiLCAiciI6ICJbREVNT10gVGV4dG8gZGUgcHJ1ZWJhLCBubyBlcyB1bmEgbGVjdHVyYSByZWFsLiJ9LCAiRWZlY3RpdmlkYWR8Q2F1Y2EiOiB7ImMiOiAiQSIsICJyIjogIltERU1PXSBUZXh0byBkZSBwcnVlYmEsIG5vIGVzIHVuYSBsZWN0dXJhIHJlYWwuIn0sICJFZmljaWVuY2lhfFB1dHVtYXlvIjogeyJjIjogIlNEIiwgInIiOiAiW0RFTU9dIFRleHRvIGRlIHBydWViYSwgbm8gZXMgdW5hIGxlY3R1cmEgcmVhbC4ifSwgIkVmaWNpZW5jaWF8Tm9ydGUgZGUgU2FudGFuZGVyIjogeyJjIjogIlNEIiwgInIiOiAiW0RFTU9dIFRleHRvIGRlIHBydWViYSwgbm8gZXMgdW5hIGxlY3R1cmEgcmVhbC4ifSwgIkVmaWNpZW5jaWF8Q2F1Y2EiOiB7ImMiOiAiU0QiLCAiciI6ICJbREVNT10gVGV4dG8gZGUgcHJ1ZWJhLCBubyBlcyB1bmEgbGVjdHVyYSByZWFsLiJ9LCAiTXVsdGlzZWN0b3JpYWxpZGFkfFB1dHVtYXlvIjogeyJjIjogIkEiLCAiciI6ICJbREVNT10gVGV4dG8gZGUgcHJ1ZWJhLCBubyBlcyB1bmEgbGVjdHVyYSByZWFsLiJ9LCAiTXVsdGlzZWN0b3JpYWxpZGFkfE5vcnRlIGRlIFNhbnRhbmRlciI6IHsiYyI6ICJBIiwgInIiOiAiW0RFTU9dIFRleHRvIGRlIHBydWViYSwgbm8gZXMgdW5hIGxlY3R1cmEgcmVhbC4ifSwgIk11bHRpc2VjdG9yaWFsaWRhZHxDYXVjYSI6IHsiYyI6ICJWIiwgInIiOiAiW0RFTU9dIFRleHRvIGRlIHBydWViYSwgbm8gZXMgdW5hIGxlY3R1cmEgcmVhbC4ifSwgIkNvb3JkaW5hY2nDs258UHV0dW1heW8iOiB7ImMiOiAiQSIsICJyIjogIltERU1PXSBUZXh0byBkZSBwcnVlYmEsIG5vIGVzIHVuYSBsZWN0dXJhIHJlYWwuIn0sICJDb29yZGluYWNpw7NufE5vcnRlIGRlIFNhbnRhbmRlciI6IHsiYyI6ICJWIiwgInIiOiAiW0RFTU9dIFRleHRvIGRlIHBydWViYSwgbm8gZXMgdW5hIGxlY3R1cmEgcmVhbC4ifSwgIkNvb3JkaW5hY2nDs258Q2F1Y2EiOiB7ImMiOiAiViIsICJyIjogIltERU1PXSBUZXh0byBkZSBwcnVlYmEsIG5vIGVzIHVuYSBsZWN0dXJhIHJlYWwuIn0sICJfX2RlbW8iOiB0cnVlfQ==";
+const SOBRE_DEMO = "eyJQZXJ0aW5lbmNpYXxQdXR1bWF5byI6IHsiYyI6ICIzIiwgInIiOiAiW0RFTU9dIFRleHRvIGRlIHBydWViYSwgbm8gZXMgdW5hIGxlY3R1cmEgcmVhbC4ifSwgIlBlcnRpbmVuY2lhfE5vcnRlIGRlIFNhbnRhbmRlciI6IHsiYyI6ICI0IiwgInIiOiAiW0RFTU9dIFRleHRvIGRlIHBydWViYSwgbm8gZXMgdW5hIGxlY3R1cmEgcmVhbC4ifSwgIlBlcnRpbmVuY2lhfENhdWNhIjogeyJjIjogIjUiLCAiciI6ICJbREVNT10gVGV4dG8gZGUgcHJ1ZWJhLCBubyBlcyB1bmEgbGVjdHVyYSByZWFsLiJ9LCAiQ29oZXJlbmNpYXxQdXR1bWF5byI6IHsiYyI6ICIyIiwgInIiOiAiW0RFTU9dIFRleHRvIGRlIHBydWViYSwgbm8gZXMgdW5hIGxlY3R1cmEgcmVhbC4ifSwgIkNvaGVyZW5jaWF8Tm9ydGUgZGUgU2FudGFuZGVyIjogeyJjIjogIjQiLCAiciI6ICJbREVNT10gVGV4dG8gZGUgcHJ1ZWJhLCBubyBlcyB1bmEgbGVjdHVyYSByZWFsLiJ9LCAiQ29oZXJlbmNpYXxDYXVjYSI6IHsiYyI6ICI1IiwgInIiOiAiW0RFTU9dIFRleHRvIGRlIHBydWViYSwgbm8gZXMgdW5hIGxlY3R1cmEgcmVhbC4ifSwgIkVmZWN0aXZpZGFkfFB1dHVtYXlvIjogeyJjIjogIjMiLCAiciI6ICJbREVNT10gVGV4dG8gZGUgcHJ1ZWJhLCBubyBlcyB1bmEgbGVjdHVyYSByZWFsLiJ9LCAiRWZlY3RpdmlkYWR8Tm9ydGUgZGUgU2FudGFuZGVyIjogeyJjIjogIjMiLCAiciI6ICJbREVNT10gVGV4dG8gZGUgcHJ1ZWJhLCBubyBlcyB1bmEgbGVjdHVyYSByZWFsLiJ9LCAiRWZlY3RpdmlkYWR8Q2F1Y2EiOiB7ImMiOiAiMyIsICJyIjogIltERU1PXSBUZXh0byBkZSBwcnVlYmEsIG5vIGVzIHVuYSBsZWN0dXJhIHJlYWwuIn0sICJFZmljaWVuY2lhfFB1dHVtYXlvIjogeyJjIjogIlNEIiwgInIiOiAiW0RFTU9dIFRleHRvIGRlIHBydWViYSwgbm8gZXMgdW5hIGxlY3R1cmEgcmVhbC4ifSwgIkVmaWNpZW5jaWF8Tm9ydGUgZGUgU2FudGFuZGVyIjogeyJjIjogIlNEIiwgInIiOiAiW0RFTU9dIFRleHRvIGRlIHBydWViYSwgbm8gZXMgdW5hIGxlY3R1cmEgcmVhbC4ifSwgIkVmaWNpZW5jaWF8Q2F1Y2EiOiB7ImMiOiAiU0QiLCAiciI6ICJbREVNT10gVGV4dG8gZGUgcHJ1ZWJhLCBubyBlcyB1bmEgbGVjdHVyYSByZWFsLiJ9LCAiTXVsdGlzZWN0b3JpYWxpZGFkfFB1dHVtYXlvIjogeyJjIjogIjMiLCAiciI6ICJbREVNT10gVGV4dG8gZGUgcHJ1ZWJhLCBubyBlcyB1bmEgbGVjdHVyYSByZWFsLiJ9LCAiTXVsdGlzZWN0b3JpYWxpZGFkfE5vcnRlIGRlIFNhbnRhbmRlciI6IHsiYyI6ICIzIiwgInIiOiAiW0RFTU9dIFRleHRvIGRlIHBydWViYSwgbm8gZXMgdW5hIGxlY3R1cmEgcmVhbC4ifSwgIk11bHRpc2VjdG9yaWFsaWRhZHxDYXVjYSI6IHsiYyI6ICI0IiwgInIiOiAiW0RFTU9dIFRleHRvIGRlIHBydWViYSwgbm8gZXMgdW5hIGxlY3R1cmEgcmVhbC4ifSwgIkNvb3JkaW5hY2nDs258UHV0dW1heW8iOiB7ImMiOiAiMyIsICJyIjogIltERU1PXSBUZXh0byBkZSBwcnVlYmEsIG5vIGVzIHVuYSBsZWN0dXJhIHJlYWwuIn0sICJDb29yZGluYWNpw7NufE5vcnRlIGRlIFNhbnRhbmRlciI6IHsiYyI6ICI0IiwgInIiOiAiW0RFTU9dIFRleHRvIGRlIHBydWViYSwgbm8gZXMgdW5hIGxlY3R1cmEgcmVhbC4ifSwgIkNvb3JkaW5hY2nDs258Q2F1Y2EiOiB7ImMiOiAiNSIsICJyIjogIltERU1PXSBUZXh0byBkZSBwcnVlYmEsIG5vIGVzIHVuYSBsZWN0dXJhIHJlYWwuIn0sICJfX2RlbW8iOiB0cnVlfQ==";
 
 /* ═══════════════════════════ utilidades ═══════════════════════════ */
 const $ = s => document.querySelector(s);
@@ -550,11 +569,12 @@ async function copy(txt){
 }
 function pill(v){
   if(v==null||v===""||v==="—") return '<span class="pnone">—</span>';
-  const map={V:"pV",A:"pA",R:"pR",G:"pG",X:"pX",M:"pM",SD:"pSD"};
-  const lbl={V:"V",A:"A",R:"R",G:"G",X:"NA",M:"MIXTO",SD:"SD"}[v]||v;
+  const map={"1":"p1","2":"p2","3":"p3","4":"p4","5":"p5",G:"pG",X:"pX",SD:"pSD"};
+  const lbl={G:"G",X:"NA",SD:"SD"}[v]||v;
   return '<span class="pill '+(map[v]||"pG")+'">'+lbl+'</span>';
 }
-const CELLBG = {V:"var(--vb)",A:"var(--ab)",R:"var(--rb)",G:"var(--gb)",X:"var(--gb)",M:"#E4EEF2",SD:"var(--gb)"};
+const CELLBG = {"1":"var(--e1)","2":"var(--e2)","3":"var(--e3)","4":"var(--e4)","5":"var(--e5)",
+                G:"var(--gb)",X:"var(--gb)",SD:"var(--gb)"};
 function cellTd(v, extra){
   if(!v||v==="—") return '<td class="cnone">—</td>';
   return '<td class="cfill"'+(extra||"")+' style="background:'+(CELLBG[v]||"var(--gb)")+'">'+pill(v)+'</td>';
@@ -578,7 +598,7 @@ function decodeVote(raw){
   if(checksum(body)!==s[13]) return null;
   const t = TFROM[body[0]]; if(!t) return null;
   const vals = body.slice(1).split("");
-  if(vals.some(v=>!"VARGX".includes(v))) return null;
+  if(vals.some(v=>!"12345GX".includes(v))) return null;
   return {terr:t, vals};
 }
 const limpio = t => String(t||"").replace(/[|\n\r]/g," ").trim();
@@ -607,8 +627,8 @@ function parsePaste(txt){
       const idx = parseInt(parts[0].replace(/[^\d]/g,""),10);
       if(!(idx>=1&&idx<=6)) return;
       const cols = (parts[1]||"").trim().toUpperCase().split("/");
-      const cW = "VARX".includes(cols[0])&&cols[0] ? cols[0] : "";
-      const cP = "VARX".includes(cols[1])&&cols[1] ? cols[1] : "";
+      const cW = "12345X".includes(cols[0])&&cols[0] ? cols[0] : "";
+      const cP = "12345X".includes(cols[1])&&cols[1] ? cols[1] : "";
       if(!cW && !cP) return;
       cartas.push({
         terr:tname, i:idx-1, cW, cP,
@@ -631,7 +651,7 @@ function parsePaste(txt){
       if(acc.length===14){
         const d = decodeVote(acc);
         if(d){ votes.push({terr:d.terr, vals:d.vals, code:acc}); i=j; }
-        else if(TFROM[acc[0]] && /^[VARGX]{12}$/.test(acc.slice(1,13))) bad++;
+        else if(TFROM[acc[0]] && /^[1-5GX]{12}$/.test(acc.slice(1,13))) bad++;
         break;
       }
     }
@@ -745,7 +765,7 @@ $("#pStart").onclick = ()=>{ P.step = P.vals.findIndex(v=>v===""); if(P.step<0) 
 function goStep(){
   $("#pTerr").classList.add("hide"); $("#pReview").classList.add("hide"); $("#pDone").classList.add("hide");
   $("#pStep").classList.remove("hide");
-  $("#pTitle").textContent = "Pinte su territorio, sector por sector";
+  $("#pTitle").textContent = "Su territorio, sector por sector";
   const i = P.step;
   const bar=$("#pBar"); bar.innerHTML="";
   for(let k=0;k<6;k++){
@@ -761,19 +781,24 @@ function goStep(){
     d.style.borderTopColor = si===0 ? "var(--steel)" : "#6E9E4A";
     d.appendChild(el("h4",null,'<span class="sdot" style="background:'+(si===0?"var(--steel)":"#6E9E4A")+'"></span>'+esc(s[0])));
     d.appendChild(el("p","sub",esc(s[1])));
-    const o=el("div","opts");
-    VALS.forEach(([v,lbl])=>{
-      const b=el("button","opt",VLBL[v]+"<small>"+esc(lbl)+"</small>");
-      b.dataset.v=v;
-      b.setAttribute("aria-pressed", P.vals[i*2+si]===v);
-      b.onclick=()=>{
-        P.vals[i*2+si] = (P.vals[i*2+si]===v ? "" : v);
-        save("part",P); goStep();
-        if(P.vals[i*2]!=="" && P.vals[i*2+1]!=="" && i<5) setTimeout(()=>{ P.step=i+1; goStep(); }, 220);
-      };
-      o.appendChild(b);
-    });
-    d.appendChild(o);
+    const marcar = v => ()=>{
+      P.vals[i*2+si] = (P.vals[i*2+si]===v ? "" : v);
+      save("part",P); goStep();
+      if(P.vals[i*2]!=="" && P.vals[i*2+1]!=="" && i<5) setTimeout(()=>{ P.step=i+1; goStep(); }, 220);
+    };
+    const fila = (lista, cls)=>{
+      const o=el("div","opts"+(cls?" "+cls:""));
+      lista.forEach(([v,lbl])=>{
+        const b=el("button","opt",VLBL[v]+"<small>"+esc(lbl)+"</small>");
+        b.dataset.v=v;
+        b.setAttribute("aria-pressed", P.vals[i*2+si]===v);
+        b.onclick=marcar(v);
+        o.appendChild(b);
+      });
+      d.appendChild(o);
+    };
+    fila(ESC);
+    fila(FUERA, "fuera");
     box.appendChild(d);
   });
   $("#pPrev").disabled = i===0;
@@ -822,7 +847,7 @@ $("#pEdit").onclick = ()=>review();
 
 /* ═══════════════════════════ mesa ═══════════════════════════ */
 const SCOL = ["var(--steel)", "#6E9E4A"];
-const MVALS = [["V","Bien"],["A","A medias"],["R","No se cumplió"],["X","No operó"]];
+const MVALS = ESC.concat([["X","No operó"]]);
 
 function renderMesa(){
   const wrap=$("#mTerrChips"); wrap.innerHTML="";
@@ -968,31 +993,36 @@ function mCards(){
         row.innerHTML = '<div class="slab"><i style="background:'+SCOL[si]+'"></i>'+esc(sec[0])+
           '<em>'+esc(sec[1])+'</em></div>';
         if(M.votos.length){
-          const cuenta={V:0,A:0,R:0,G:0,X:0};
+          const cuenta={"1":0,"2":0,"3":0,"4":0,"5":0,G:0,X:0};
           M.votos.forEach(v=>{ const x=v.vals[i*2+si]; if(cuenta[x]!=null) cuenta[x]++; });
           const rp=el("div","reparto"); rp.appendChild(el("span",null,"Ustedes pusieron:"));
           let algo=false;
-          [["V","pV"],["A","pA"],["R","pR"],["G","pG"],["X","pX"]].forEach(([k,cls])=>{
+          [["1","p1"],["2","p2"],["3","p3"],["4","p4"],["5","p5"],["G","pG"],["X","pX"]].forEach(([k,cls])=>{
             if(!cuenta[k]) return; algo=true;
             rp.appendChild(el("span","rp "+cls, (k==="X"?"NA":k)+" × "+cuenta[k]));
           });
           if(!algo) rp.appendChild(el("span",null,"—"));
           row.appendChild(rp);
         }
-        const o = el("div","opts opt4");
-        MVALS.forEach(([v,lbl])=>{
-          const bt=el("button","opt",(v==="X"?"NA":v)+"<small>"+esc(lbl)+"</small>");
-          bt.dataset.v=v; bt.setAttribute("aria-pressed", c[key]===v);
-          bt.onclick=()=>{ c[key] = c[key]===v?"":v; save("mesa",M); agendarSubidaCartas(); mCards(); };
-          o.appendChild(bt);
-        });
-        row.appendChild(o);
+        const ponerFila = (lista, cls)=>{
+          const o = el("div","opts"+(cls?" "+cls:""));
+          if(cls==="fuera") o.style.gridTemplateColumns="1fr";
+          lista.forEach(([v,lbl])=>{
+            const bt=el("button","opt",(v==="X"?"NA":v)+"<small>"+esc(lbl)+"</small>");
+            bt.dataset.v=v; bt.setAttribute("aria-pressed", c[key]===v);
+            bt.onclick=()=>{ c[key] = c[key]===v?"":v; save("mesa",M); agendarSubidaCartas(); mCards(); };
+            o.appendChild(bt);
+          });
+          row.appendChild(o);
+        };
+        ponerFila(ESC);
+        ponerFila([["X","No operó aquí"]], "fuera");
         body.appendChild(row);
       });
 
       /* ── el porqué ──────────────────────────────────────────────
          Compartido por defecto, pero la posibilidad de separarlo está
-         siempre a la vista. Si los dos colores quedaron distintos, se
+         siempre a la vista. Si las dos notas quedaron a tres peldaños, se
          separa solo y ya no se puede volver a juntar. */
       const campo = (destino, etiqueta, sub, color, ph)=>{
         const lab = el("label","fld");
@@ -1013,7 +1043,7 @@ function mCards(){
 
       if(separado(c)){
         if(seSepara(c)) body.appendChild(el("p","aviso-sep",
-          "Los dos colores les quedaron distintos, así que el porqué va por separado."));
+          "Las dos notas les quedaron a tres peldaños o más, así que el porqué va por separado."));
         campo("razon",  "Porque… en "+SECT[0][0], "", SCOL[0], "Los kits no variaron con el diagnóstico.");
         campo("razon2", "Porque… en "+SECT[1][0], "", SCOL[1], "En protección sí hubo ajuste caso a caso.");
         if(!seSepara(c)){
@@ -1095,9 +1125,25 @@ $("#mClear").onclick = ()=>{
 };
 
 /* ═══════════════════════════ facilitador ═══════════════════════════ */
+/* Convierte un sobre viejo de tres niveles a la escala de cinco. La conversión
+   es mecánica y se avisa en pantalla: hay que revisarla, no darla por buena. */
+const VIEJO5 = {V:"4", A:"3", R:"2"};
+function normalizarSobre(o){
+  if(!o) return o;
+  let convertido = false;
+  const out = {};
+  for(const k in o){
+    const e = o[k];
+    if(k.indexOf("|")<0 || !e || typeof e!=="object"){ out[k]=e; continue; }
+    if(VIEJO5[e.c]){ out[k] = {c:VIEJO5[e.c], r:e.r}; convertido = true; }
+    else out[k] = e;
+  }
+  if(convertido) out.__convertido = true;
+  return out;
+}
 function sobreData(){
-  if(F.sobre) return F.sobre;
-  if(SOBRE_B64){ try{ return JSON.parse(b64d(SOBRE_B64)); }catch(e){} }
+  if(F.sobre) return normalizarSobre(F.sobre);
+  if(SOBRE_B64){ try{ return normalizarSobre(JSON.parse(b64d(SOBRE_B64))); }catch(e){} }
   return null;
 }
 function consolidate(){
@@ -1106,7 +1152,7 @@ function consolidate(){
     TERR.forEach(t=>{
       const cell={crit:c[0], terr:t, sect:[], carta:null, sobre:null};
       for(let s=0;s<2;s++){
-        const counts={V:0,A:0,R:0,G:0,X:0};
+        const counts={"1":0,"2":0,"3":0,"4":0,"5":0,G:0,X:0};
         F.votes.filter(v=>v.terr===t).forEach(v=>{ const x=v.vals[ci*2+s]; if(counts[x]!=null) counts[x]++; });
         const n=Object.values(counts).reduce((a,b)=>a+b,0);
         let dom="—", best=-1;
@@ -1114,12 +1160,13 @@ function consolidate(){
         cell.sect.push({counts, n, dom, peso: PESO[dom]||0});
       }
       const w=cell.sect[0], p=cell.sect[1];
-      cell.brechaVoto = (w.peso&&p.peso) ? (Math.abs(w.peso-p.peso)>=2 ? "NO" : (w.dom===p.dom?"SI":"CASI")) : "";
+      /* distancia entre sectores, en peldaños de la escala de cinco */
+      cell.distVoto = (w.peso&&p.peso) ? Math.abs(w.peso-p.peso) : null;
       const cs = F.cartas.filter(x=>x.terr===t && x.i===ci);
       cell.carta = cs.length ? cs[cs.length-1] : null;
       const k = cell.carta;
       const pw = k?(PESO[k.cW]||0):0, pp = k?(PESO[k.cP]||0):0;
-      cell.brecha = (pw&&pp) ? (Math.abs(pw-pp)>=2 ? "NO" : (k.cW===k.cP?"SI":"CASI")) : (k?"":cell.brechaVoto);
+      cell.dist = (pw&&pp) ? Math.abs(pw-pp) : (k ? null : cell.distVoto);
       const sd = sobreData();
       cell.sobre = sd ? (sd[c[0]+"|"+t] || null) : null;
       rows.push(cell);
@@ -1155,27 +1202,29 @@ function hotOf(cell){
   const dist = (a,b)=> (PESO[a]&&PESO[b]) ? Math.abs(PESO[a]-PESO[b]) : 0;
   const salto = Math.max(dist(dW,k.cW), dist(dP,k.cP));   // mesa vs. su propia gente
 
-  /* 1 · Lo que la sala puede resolver hoy, sin depender de nadie más. */
-  if(salto>=2)
+  /* 1 · Lo que la sala puede resolver hoy, sin depender de nadie más.
+     En una escala de cinco, tres peldaños es un desacuerdo real; uno o dos
+     son matiz y se registran sin ocupar el plenario. */
+  if(salto>=3)
     return [1,"La mesa acordó algo muy distinto de lo que votó su gente",
-      "Solos pusieron un color y juntos acordaron otro, a dos peldaños. Puede ser una deliberación que corrigió la primera impresión, o una voz que se impuso. Solo ellos pueden decirlo."];
-  if(cell.brecha==="NO")
+      "Solos pusieron una nota y juntos acordaron otra, a "+salto+" peldaños de distancia. Puede ser una deliberación que corrigió la primera impresión, o una voz que se impuso. Solo ellos pueden decirlo."];
+  if(cell.dist>=3)
     return [1,"Los dos sectores se comportaron muy distinto",
-      "La misma mesa pintó WASH y Alojamiento a dos peldaños de Protección, ICLA y Educación. No es una contradicción —los sectores pueden ir distinto— pero sí obliga a decidir si este criterio se escribe con un solo veredicto o con dos. "+(k.razon2?"Dicen: ":"")];
+      "La misma mesa puso WASH y Alojamiento a "+cell.dist+" peldaños de Protección, ICLA y Educación. No es una contradicción —los sectores pueden ir distinto— pero sí obliga a decidir si este criterio se escribe con una nota o con dos. "+(k.razon2?"Dicen: ":"")];
   if(k.nodeacuerdo)
     return [2,"La mesa no se puso de acuerdo",
       "El desacuerdo quedó declarado. Vale la pena oírlo entero: dos lecturas conviviendo son un dato, no un empate."];
-  if(salto===1)
-    return [3,"La mesa se movió un peldaño respecto de su gente",
+  if(salto>=1)
+    return [3,"La mesa se movió "+salto+(salto===1?" peldaño":" peldaños")+" respecto de su gente",
       "Lo que pusieron solos y lo que acordaron juntos no coincide del todo. Se registra; se discute solo si sobra tiempo."];
 
   /* 2 · Lo que hay que preguntarle a la sala antes de escribir. */
-  if(sv==="SD" && cols.some(c=>c==="V"||c==="R"))
+  if(sv==="SD" && cols.some(c=>PESO[c]>0))
     return [2,"Aquí ellos tienen algo que nosotros no",
-      "Pusieron color en un criterio donde nuestra lectura provisional dice «sin dato». Puede haber evidencia que no alcanzamos a ver."];
-  if(sv && cols.some(c=>(c==="V"&&sv==="R")||(c==="R"&&sv==="V")))
-    return [2,"Nuestra lectura provisional y la de la mesa se cruzan",
-      "Leímos esta casilla al revés que ellos. No sabemos todavía quién tiene razón: por eso se pregunta antes de redactar."];
+      "Pusieron nota en un criterio donde nuestra lectura provisional dice «sin dato». Puede haber evidencia que no alcanzamos a ver."];
+  if(sv && PESO[sv] && cols.some(c=>dist(c,sv)>=3))
+    return [2,"Nuestra lectura provisional y la de la mesa se separan",
+      "Hay tres peldaños o más entre lo que pusimos nosotros y lo que puso la mesa. No sabemos todavía quién tiene razón: por eso se pregunta antes de redactar."];
   {
     const flojo = f => f==="CZ" || f==="CO";
     const fs = [];
@@ -1188,9 +1237,9 @@ function hotOf(cell){
   if(dW==="G"||dP==="G")
     return [3,"Casi nadie sabía en un bloque",
       "Ahí hay un vacío de información: el informe tendrá que declararlo en vez de rellenarlo."];
-  if(sv && cols.some(c=>c!==sv))
-    return [4,"Un peldaño de distancia con nuestra lectura",
-      "Se registra y no se debate."];
+  if(sv && PESO[sv] && cols.some(c=>c!==sv))
+    return [4,"Diferencia menor con nuestra lectura",
+      "Uno o dos peldaños. Se registra y no se debate."];
   return null;
 }
 let pararFac = ()=>{};
@@ -1218,12 +1267,12 @@ function renderFac(){
   const rows=consolidate();
   const nv=F.votes.length, nc=new Set(F.cartas.map(c=>c.terr+"|"+c.i)).size;
   const porT = TERR.map(t=>t.split(" ")[0]+" "+F.votes.filter(v=>v.terr===t).length).join(" · ");
-  const nbr = rows.filter(r=>r.brecha==="NO").length;
+  const nbr = rows.filter(r=>r.dist>=3).length;
   const nc2 = new Set(F.cartas.map(c=>c.terr+"|"+c.i)).size;
   $("#fStat").innerHTML =
     '<div style="--sc:var(--steel)"><b>'+nv+'</b><span>Tableros</span></div>'+
     '<div style="--sc:var(--crimson)"><b>'+nc2+' <span style="font-size:14px;color:var(--mut)">/ 18</span></b><span>Cartas</span></div>'+
-    '<div style="--sc:var(--orange)"><b>'+nbr+'</b><span>Brechas de dos peldaños</span></div>'+
+    '<div style="--sc:var(--orange)"><b>'+nbr+'</b><span>Sectores muy separados</span></div>'+
     '<div style="--sc:#6E9E4A;min-width:230px"><b style="font-size:15px;line-height:2.1">'+
       TERR.map(t=>'<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:'+TCOLOR[t]+';margin-right:5px"></span>'+esc(t.split(" ")[0])+" "+F.votes.filter(v=>v.terr===t).length).join(" · ")+
     '</b><span>Votos por territorio</span></div>';
@@ -1232,14 +1281,15 @@ function renderFac(){
   let h="<tr><th rowspan='2'>Criterio</th><th rowspan='2'>Territorio</th>"+
     "<th colspan='2' style='background:var(--steel)'>WASH y Alojamiento</th>"+
     "<th colspan='2' style='background:#6E9E4A'>Protección, ICLA y Educación</th>"+
-    "<th rowspan='2' title='Distancia entre el color de WASH/Alojamiento y el de Protección/ICLA/Educación en la carta de la mesa'>Distancia<br>entre sectores</th><th rowspan='2'>Lo sé por</th><th rowspan='2' title='Lectura provisional del equipo evaluador. Es una hipótesis de trabajo, no el veredicto del informe.'>Nuestra<br>lectura</th></tr>"+
+    "<th rowspan='2' title='Peldaños de diferencia entre la nota de WASH/Alojamiento y la de Protección/ICLA/Educación en la carta de la mesa'>Distancia<br>entre sectores</th><th rowspan='2'>Lo sé por</th><th rowspan='2' title='Lectura provisional del equipo evaluador. Es una hipótesis de trabajo, no el veredicto del informe.'>Nuestra<br>lectura</th></tr>"+
     "<tr><th class='sub' style='background:#5C7E92'>voto</th><th class='sub' style='background:#5C7E92'>mesa</th>"+
     "<th class='sub' style='background:#7DAB5C'>voto</th><th class='sub' style='background:#7DAB5C'>mesa</th></tr>";
   rows.forEach(r=>{
     const k=r.carta;
-    const br = r.brecha==="NO" ? '<span class="pill pR" title="Los dos sectores están a dos peldaños: el veredicto territorial tapa dos realidades distintas">dos peldaños</span>'
-             : (r.brecha==="CASI" ? '<span class="small" title="Los dos sectores están a un peldaño de distancia">un peldaño</span>'
-             : (r.brecha==="SI" ? '<span class="small" title="Los dos sectores quedaron en el mismo color">igual</span>' : '<span class="pnone">—</span>'));
+    const br = (r.dist==null) ? '<span class="pnone">—</span>'
+             : (r.dist>=3 ? '<span class="pill" style="background:#FBEEd0;color:#8a6100;border-color:#B57A08" title="Tres peldaños o más: una sola nota estaría tapando dos realidades distintas">'+r.dist+' peldaños</span>'
+             : (r.dist===0 ? '<span class="small">igual</span>'
+             : '<span class="small">'+r.dist+(r.dist===1?" peldaño":" peldaños")+'</span>'));
     const nW=r.sect[0].n?(" title='"+r.sect[0].n+" votos'"):"", nP=r.sect[1].n?(" title='"+r.sect[1].n+" votos'"):"";
     h+="<tr><td class='k'>"+esc(r.crit)+"</td>"+
        "<td class='tcell' style='--tc:"+TCOLOR[r.terr]+"'>"+esc(r.terr)+"</td>"+
@@ -1318,7 +1368,17 @@ function renderFac(){
   $("#sobreClosed").classList.toggle("hide", !sd || F.sobreOpen);
   $("#sobreOpen").classList.toggle("hide", !sd || !F.sobreOpen);
   const esDemo = !!(sd && sd.__demo);
+  const convertido = !!(sd && sd.__convertido);
   document.querySelectorAll(".demowarn").forEach(n=>n.remove());
+  if(convertido){
+    ["#sobreClosed","#sobreOpen"].forEach(sel=>{
+      const box=$(sel); if(!box || box.classList.contains("hide")) return;
+      const w=el("div","notice demowarn");
+      w.innerHTML="<b>Sobre convertido.</b> Venía en la escala de tres niveles y se pasó a 1–5 de forma mecánica (V→4, A→3, R→2). Revísenlo antes de proyectarlo: la conversión es un supuesto, no una lectura.";
+      w.style.borderLeftColor="var(--orange)"; w.style.background="#FFF6F0";
+      box.insertBefore(w, box.firstChild);
+    });
+  }
   if(esDemo){
     ["#sobreClosed","#sobreOpen"].forEach(sel=>{
       const box=$(sel); if(!box || box.classList.contains("hide")) return;
@@ -1371,7 +1431,7 @@ $("#sobreLoad").onclick = ()=>{
 };
 $("#fCsv").onclick = ()=>{
   const rows=consolidate();
-  const head=["Criterio","Territorio","Voto_WASH_Aloj","n_WA","Mesa_WASH_Aloj","Voto_Prot_ICLA_Educ","n_PIE","Mesa_Prot_ICLA_Educ","Distancia_entre_sectores","Porque_compartido_o_WASH_Aloj","Porque_Prot_ICLA_Educ","Lo_se_por","Lo_se_por_Prot_ICLA_Educ","Sin_acuerdo","Evaluacion","Casilla_caliente","Al_plenario"];
+  const head=["Criterio","Territorio","Voto_WASH_Aloj","n_WA","Mesa_WASH_Aloj","Voto_Prot_ICLA_Educ","n_PIE","Mesa_Prot_ICLA_Educ","Distancia_entre_sectores_en_peldanos","Porque_compartido_o_WASH_Aloj","Porque_Prot_ICLA_Educ","Lo_se_por","Lo_se_por_Prot_ICLA_Educ","Sin_acuerdo","Evaluacion","Casilla_caliente","Al_plenario"];
   const q = t => '"'+String(t||"").replace(/"/g,"'")+'"';
   const lines=[head.join(";")];
   rows.forEach(r=>{
@@ -1379,7 +1439,7 @@ $("#fCsv").onclick = ()=>{
     lines.push([r.crit,r.terr,
       r.sect[0].dom,r.sect[0].n,k?k.cW:"",
       r.sect[1].dom,r.sect[1].n,k?k.cP:"",
-      r.brecha==="NO"?"dos peldanos":(r.brecha==="CASI"?"un peldano":(r.brecha==="SI"?"igual":"")),
+      r.dist==null?"":String(r.dist),
       k?q(k.razon):"", k?q(k.razon2):"",
       k&&k.fuente?(FLBL[k.fuente]||k.fuente):"", k&&k.fuente2?(FLBL[k.fuente2]||k.fuente2):"",
       k&&k.nodeacuerdo?"si":"",
@@ -1418,16 +1478,16 @@ else {
   const txt = {
     hHero: "Antes de abrir nuestra lectura queremos la de ustedes. Primero cada quien valora su propio territorio separando dos bloques sectoriales; después las mesas escriben por qué. Todo viaja solo entre los tres pasos: nadie copia ni pega nada.",
     hRol1: "Mi territorio, doce casillas, siete minutos. Al terminar presiono Enviar y le llega a mi mesa.",
-    hRol2: "Los tableros de mi mesa llegan solos. Escribimos seis cartas: un color por sector, la razón y de dónde lo sabemos.",
+    hRol2: "Los tableros de mi mesa llegan solos. Escribimos seis cartas: una nota por sector, la razón y de dónde lo sabemos.",
     hRol3: "Para quien facilita. El mapa se arma en vivo con lo que van enviando, y de ahí salen las casillas calientes y el sobre.",
     pE1t: "Enviado. Su tablero ya está con su mesa",
-    pE1s: "No lleva su nombre: solo el territorio y los doce colores. El código de abajo es el respaldo, por si la conexión falla.",
+    pE1s: "No lleva su nombre: solo el territorio y las doce notas. El código de abajo es el respaldo, por si la conexión falla.",
     pPie: "Puede corregir y volver a enviar: vale el último. No tiene que hacer nada más.",
     mVTit: "Los tableros de esta mesa",
-    mVLead: "Van apareciendo solos, apenas cada quien presiona Enviar. Cuando estén todos, empiecen las cartas: van a ver, casilla por casilla, qué puso cada quien antes de acordar el color.",
+    mVLead: "Van apareciendo solos, apenas cada quien presiona Enviar. Cuando estén todos, empiecen las cartas: van a ver, casilla por casilla, qué puso cada quien antes de acordar la nota.",
     fLead: "El mapa se arma solo con lo que van enviando las personas y las mesas: no hay que pegar nada. Proyecte esta pantalla y déjela abierta.",
     mOutLbl: "Bloque de respaldo — solo hace falta si se cae la conexión",
-    tl1: "Todos entran en «Voy a votar», eligen su territorio y pintan doce casillas. Al terminar presionan Enviar y su tablero le llega solo a su mesa.",
+    tl1: "Todos entran en «Voy a votar», eligen su territorio y puntúan doce casillas de 1 a 5. Al terminar presionan Enviar y su tablero le llega solo a su mesa.",
     tl2: "Un dispositivo por mesa ve los tableros de sus integrantes ya cargados y escribe seis cartas. Se guardan solas: no hay que mandar nada.",
     tl3: "Quien facilita proyecta «Consolidar»: el mapa ya está armado con lo que enviaron las mesas. Cuatro minutos por mesa."
   };
