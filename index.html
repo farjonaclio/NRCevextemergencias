@@ -813,15 +813,37 @@ function renderMesa(){
     const b=el("button","chip",'<span class="cdot"></span>'+esc(t));
     b.style.setProperty("--tc", TCOLOR[t]);
     b.setAttribute("aria-pressed", M.terr===t);
-    b.onclick=()=>{ M.terr=t; save("mesa",M); renderMesa(); };
+    b.onclick=()=>{
+      if(M.terr && M.terr!==t){
+        const hay = M.cartas.some(c=>c.cW||c.cP||(c.razon||"").trim());
+        if(hay && !confirm("Esta mesa ya tiene cartas escritas para "+M.terr+
+             ".\n\nCambiar a "+t+" las borra y empieza de cero. ¿Seguir?")) return;
+        limpiarMesa(M.terr);
+      }
+      M.terr=t; save("mesa",M); renderMesa();
+    };
     wrap.appendChild(b);
   });
   $("#mStart").disabled = !M.terr;
   $("#mTerr").classList.remove("hide"); $("#mForm").classList.add("hide"); $("#mVotos").classList.add("hide");
   $("#mTitle").textContent = "¿Qué territorio le tocó a esta mesa?";
-  if(M.terr && M.cartas.some(c=>c.cW||c.cP)) $("#mStart").textContent="Continuar donde iba";
+  $("#mStart").textContent = (M.terr && M.cartas.some(c=>c.cW||c.cP))
+    ? "Continuar donde iba" : "Empezar";
 }
 let pararVotos = ()=>{}, subirCartaPend = null;
+/* Borra lo de esta mesa aquí y, si había subido cartas, también en la sala.
+   Solo este dispositivo publica bajo su territorio, así que es seguro. */
+function limpiarMesa(terrAnterior){
+  clearTimeout(subirCartaPend);
+  pararVotos(); pararVotos = ()=>{};
+  const habiaCartas = M.cartas.some(c=>c.cW||c.cP);
+  M.cartas = Array(6).fill(null).map(NUEVA_CARTA);
+  M.votos = []; M.open = 0;
+  save("mesa",M);
+  const ind=$("#mSync"); if(ind){ ind.textContent=""; ind.className="small"; }
+  $("#mOut").classList.add("hide"); $("#mOutLbl").classList.add("hide");
+  if(haySync && terrAnterior && habiaCartas) subir("/cartas/"+TCODE[terrAnterior], null);
+}
 function sincronizarMesa(){
   pararVotos();
   if(!haySync || !M.terr) return;
@@ -1028,9 +1050,11 @@ $("#mExport").onclick = ()=>{
   if(faltan.length) toast("Copiado · falta "+faltan.join(", "));
 };
 $("#mClear").onclick = ()=>{
-  if(!confirm("¿Borrar las seis cartas de esta mesa?")) return;
-  M.cartas = Array(6).fill(null).map(NUEVA_CARTA); M.open=0;
-  save("mesa",M); mCards(); $("#mOut").classList.add("hide"); $("#mOutLbl").classList.add("hide");
+  if(!confirm("¿Borrar las seis cartas de esta mesa? También se borran en la consolidación.")) return;
+  const t = M.terr;
+  limpiarMesa(t);
+  M.terr = t; save("mesa",M);
+  sincronizarMesa(); mCards();
 };
 
 /* ═══════════════════════════ facilitador ═══════════════════════════ */
@@ -1129,14 +1153,14 @@ function renderFac(){
   let h="<tr><th rowspan='2'>Criterio</th><th rowspan='2'>Territorio</th>"+
     "<th colspan='2' style='background:var(--steel)'>WASH y Alojamiento</th>"+
     "<th colspan='2' style='background:#6E9E4A'>Protección, ICLA y Educación</th>"+
-    "<th rowspan='2'>¿Se separan?</th><th rowspan='2'>Lo sé por</th><th rowspan='2'>Sobre</th></tr>"+
+    "<th rowspan='2' title='Distancia entre el color de WASH/Alojamiento y el de Protección/ICLA/Educación en la carta de la mesa'>Distancia<br>entre sectores</th><th rowspan='2'>Lo sé por</th><th rowspan='2'>Sobre</th></tr>"+
     "<tr><th class='sub' style='background:#5C7E92'>voto</th><th class='sub' style='background:#5C7E92'>mesa</th>"+
     "<th class='sub' style='background:#7DAB5C'>voto</th><th class='sub' style='background:#7DAB5C'>mesa</th></tr>";
   rows.forEach(r=>{
     const k=r.carta;
-    const br = r.brecha==="NO" ? '<span class="pill pR">SÍ</span>'
-             : (r.brecha==="CASI" ? '<span class="small">un peldaño</span>'
-             : (r.brecha==="SI" ? '<span class="small">no</span>' : '<span class="pnone">—</span>'));
+    const br = r.brecha==="NO" ? '<span class="pill pR" title="Los dos sectores están a dos peldaños: el veredicto territorial tapa dos realidades distintas">dos peldaños</span>'
+             : (r.brecha==="CASI" ? '<span class="small" title="Los dos sectores están a un peldaño de distancia">un peldaño</span>'
+             : (r.brecha==="SI" ? '<span class="small" title="Los dos sectores quedaron en el mismo color">igual</span>' : '<span class="pnone">—</span>'));
     const nW=r.sect[0].n?(" title='"+r.sect[0].n+" votos'"):"", nP=r.sect[1].n?(" title='"+r.sect[1].n+" votos'"):"";
     h+="<tr><td class='k'>"+esc(r.crit)+"</td>"+
        "<td class='tcell' style='--tc:"+TCOLOR[r.terr]+"'>"+esc(r.terr)+"</td>"+
