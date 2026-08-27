@@ -367,6 +367,17 @@ label.fld em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:
 .mcard.open{border-color:var(--steel);box-shadow:0 4px 18px rgba(43,52,67,.10)}
 .mhead{display:flex;align-items:center;gap:10px;width:100%;padding:13px 14px;background:none;border:0;font:inherit;cursor:pointer;text-align:left}
 .mcard.open .mhead{background:var(--lgt);border-bottom:1px solid var(--line)}
+.otrasm{border:1px dashed var(--line);border-radius:10px;padding:10px 12px;margin:10px 0 0;background:#FBFCFD}
+.otrasm>b{font-family:var(--disp);font-size:13.5px;color:var(--navy);display:block;margin-bottom:6px}
+.otram{display:block;padding:6px 0;border-top:1px solid var(--line)}
+.otram:first-of-type{border-top:0}
+.otrar{font-size:13.5px;color:var(--gray);margin-top:3px}
+.otraav{margin-top:7px;font-size:12.5px;color:#8a6100;background:var(--ab);border-radius:7px;padding:6px 9px}
+.mtag{display:inline-block;min-width:22px;text-align:center;font-family:var(--disp);font-weight:700;font-size:11px;
+  background:var(--lgt);border:1px solid var(--line);color:var(--gray);border-radius:5px;padding:1px 4px;margin-right:5px}
+td.multi{white-space:nowrap}
+td.multi>span.mtag{margin-left:6px}
+td.multi>span.mtag:first-child{margin-left:0}
 .mnum{width:26px;height:26px;border-radius:8px;flex:none;display:grid;place-items:center;font-family:var(--disp);font-weight:700;font-size:13px;background:var(--lgt);color:var(--mut)}
 .mcard.done .mnum{background:var(--steel);color:#fff}
 .mname{font-family:var(--disp);font-weight:700;font-size:16px;flex:1;min-width:0}
@@ -448,8 +459,8 @@ label.fld em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:
     </button>
     <button class="role" data-go="mesa" style="--rc:var(--crimson)">
       <div class="num">2</div>
-      <b>Soy una mesa</b>
-      <em id="hRol2">Recojo los códigos de mi mesa y escribo seis cartas: una nota por sector, la razón y de dónde lo sé.</em>
+      <b>Somos una mesa</b>
+      <em id="hRol2">Recogemos los códigos de nuestra mesa y escribimos seis cartas: una nota por sector, la razón y de dónde lo sabemos.</em>
     </button>
     <button class="role" data-go="fac" style="--rc:var(--lime)">
       <div class="num">3</div>
@@ -524,9 +535,10 @@ label.fld em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:
 <section id="vMesa" class="hide">
   <p class="eyebrow">Ronda 2 · mesas por territorio · 16 minutos</p>
   <h1 id="mTitle">¿Qué territorio le tocó a esta mesa?</h1>
+  <p class="small hide" id="mOtras"></p>
 
   <div id="mTerr">
-    <p class="lead">Seis cartas, una por criterio. En cada una se pinta por separado lo que pasó en WASH y Alojamiento y lo que pasó en Protección, ICLA y Educación.</p>
+    <p class="lead">Seis cartas, una por criterio. En cada una se pinta por separado lo que pasó en WASH y Alojamiento y lo que pasó en Protección: ICLA y Educación.</p>
     <div class="chips" id="mTerrChips"></div>
     <div class="nav"><button class="btn" id="mStart" disabled>Empezar</button>
       <button class="btn ghost hide" id="mRehacer">Empezar de nuevo</button></div>
@@ -700,7 +712,7 @@ const TCOLOR = {"Putumayo":"var(--steel)","Norte de Santander":"var(--crimson)",
 const TFROM = {"P":"Putumayo","N":"Norte de Santander","C":"Cauca"};
 const SECT = [
   ["WASH y Alojamiento","agua, saneamiento e higiene · alojamiento y asentamientos"],
-  ["Protección, ICLA y Educación","protección comunitaria · asesoría legal · educación en emergencias"]
+  ["Protección: ICLA y Educación","protección comunitaria · asesoría legal · educación en emergencias"]
 ];
 /* Escala de cinco pasos: grado de cumplimiento del criterio en ese sector.
    G y NA quedan fuera de la escala: no son notas bajas, son ausencias. */
@@ -710,7 +722,16 @@ const VALS = ESC.concat(FUERA);
 const VLBL = {"1":"1","2":"2","3":"3","4":"4","5":"5",G:"G",X:"NA"};
 const VNOM = Object.fromEntries(VALS);
 const PESO = {"1":1,"2":2,"3":3,"4":4,"5":5,G:0,X:0};
-const FUENTES = [["VI","Lo vi"],["CO","Me lo contaron"],["PR","Está en la presentación"],["CZ","Es mi corazonada"]];
+/* De dónde sabe la mesa lo que afirma, de lo más directo a lo más frágil.
+   «Lo viví» y «Lo vi» no son lo mismo: uno estuvo dentro de la operación,
+   el otro la presenció o la constató. */
+const FUENTES = [["VV","Lo viví"],["VI","Lo vi"],["CO","Me lo contaron"],
+                 ["PR","Está en la presentación"],["CZ","Es mi corazonada"]];
+const FAYUDA = {VV:"Estuve adentro: me tocó hacerlo o me pasó a mí",
+                VI:"Lo presencié o lo constaté en terreno, sin ser quien lo hizo",
+                CO:"Me lo contó alguien del equipo o de la comunidad",
+                PR:"Está en los hallazgos que acabamos de ver",
+                CZ:"Es lo que intuyo, sin nada que lo respalde todavía"};
 const FLBL = Object.fromEntries(FUENTES);
 
 /* Lectura provisional del equipo evaluador, codificada en base64.
@@ -870,13 +891,16 @@ async function subir(p, datos){
     marcarRed(r.ok); return r.ok;
   }catch(e){ marcarRed(false); return false; }
 }
+/* Devuelve null cuando la sala está de verdad vacía y undefined cuando no se
+   pudo leer. La diferencia importa: un bache de conexión no debe borrar de la
+   pantalla lo que ya se había consolidado. */
 async function bajar(p){
-  if(!haySync) return null;
+  if(!haySync) return undefined;
   try{
     const r = await fetch(ruta(p), {cache:"no-store"});
     marcarRed(r.ok);
-    return r.ok ? await r.json() : null;
-  }catch(e){ marcarRed(false); return null; }
+    return r.ok ? await r.json() : undefined;
+  }catch(e){ marcarRed(false); return undefined; }
 }
 /* Escucha en vivo. Firebase entrega eventos por SSE sin necesidad de SDK. */
 function escuchar(p, alCambiar){
@@ -893,7 +917,7 @@ function escuchar(p, alCambiar){
   };
   let pendiente=null;
   const refrescar = ()=>{ clearTimeout(pendiente);
-    pendiente = setTimeout(async ()=>{ const d = await bajar(p); if(d!==null||true) alCambiar(d); }, 250); };
+    pendiente = setTimeout(async ()=>{ const d = await bajar(p); if(d!==undefined) alCambiar(d); }, 250); };
   abrir(); refrescar();
   return ()=>{ muerto=true; clearTimeout(reintento); clearTimeout(pendiente); try{es&&es.close();}catch(_){}; };
 }
@@ -911,6 +935,14 @@ const nuevaPapeleta = ()=>{
 };
 const NUEVA_CARTA = ()=>({cW:"",cP:"",razon:"",razon2:"",sep:false,fuente:"",fuente2:"",nodeacuerdo:false});
 let M = load("mesa", {terr:null, open:0, votos:[], cartas:Array(6).fill(null).map(NUEVA_CARTA)});
+/* Cada dispositivo-mesa tiene su propio identificador: así pueden abrirse dos
+   mesas en el mismo territorio sin que una pise las cartas de la otra. */
+if(!M.mid){
+  const A="abcdefghijkmnpqrstuvwxyz23456789"; let x="";
+  for(let i=0;i<4;i++) x += A[Math.floor(Math.random()*A.length)];
+  M.mid = x; save("mesa",M);
+}
+const nodoCartas = terr => TCODE[terr] + M.mid;
 if(!M.cartas || !M.cartas[0] || !("cW" in M.cartas[0])) M = {terr:M.terr||null, open:0, votos:[], cartas:Array(6).fill(null).map(NUEVA_CARTA)};
 if(!M.votos) M.votos = [];
 /* Si lo que quedó guardado pertenece a otro territorio, no se arrastra:
@@ -1059,7 +1091,7 @@ function review(){
   $("#pReview").classList.remove("hide");
   $("#pTitle").textContent = "Su tablero · "+P.terr;
   const t=$("#pTable");
-  let h="<tr><th>Criterio</th><th>WASH y Alojamiento</th><th>Protección, ICLA y Educación</th></tr>";
+  let h="<tr><th>Criterio</th><th>WASH y Alojamiento</th><th>Protección: ICLA y Educación</th></tr>";
   CRIT.forEach((c,i)=>{
     h+="<tr><td class='k'>"+esc(c[0])+"</td>";
     for(let s=0;s<2;s++) h+="<td data-i='"+(i*2+s)+"' style='cursor:pointer'>"+pill(P.vals[i*2+s]||"")+"</td>";
@@ -1118,6 +1150,7 @@ function renderMesa(){
   $("#mStart").disabled = !M.terr;
   $("#mTerr").classList.remove("hide"); $("#mForm").classList.add("hide"); $("#mVotos").classList.add("hide");
   $("#mTitle").textContent = "¿Qué territorio le tocó a esta mesa?";
+  const av0=$("#mOtras"); if(av0) av0.classList.add("hide");
   const hay = M.terr && (M.cartas.some(c=>c.cW||c.cP) || M.votos.length);
   $("#mStart").textContent = hay ? "Continuar con "+M.terr : "Empezar";
   const rh = $("#mRehacer"); if(rh) rh.classList.toggle("hide", !hay);
@@ -1129,16 +1162,36 @@ function limpiarMesa(terrAnterior){
   M.terrCartas = null;
   clearTimeout(subirCartaPend);
   pararVotos(); pararVotos = ()=>{};
+  pararOtras(); pararOtras = ()=>{};
   const habiaCartas = M.cartas.some(c=>c.cW||c.cP);
   M.cartas = Array(6).fill(null).map(NUEVA_CARTA);
   M.votos = []; M.open = 0;
   save("mesa",M);
   const ind=$("#mSync"); if(ind){ ind.textContent=""; ind.className="small"; }
   $("#mOut").classList.add("hide"); $("#mOutLbl").classList.add("hide");
-  if(haySync && terrAnterior && habiaCartas) subir("/cartas/"+TCODE[terrAnterior], null);
+  if(haySync && terrAnterior && habiaCartas) subir("/cartas/"+nodoCartas(terrAnterior), null);
+}
+let pararOtras = ()=>{};
+/* Puede haber más de una mesa por territorio y no es un problema: cada una
+   guarda sus cartas aparte y las dos llegan a la consolidación. Lo único
+   importante es que la mesa lo sepa, para no creer que se le borró algo. */
+function avisarOtrasMesas(){
+  pararOtras();
+  const av = $("#mOtras"); if(!av) return;
+  av.classList.add("hide");
+  if(!haySync || !M.terr) return;
+  pararOtras = escuchar("/cartas", d=>{
+    const mias = TCODE[M.terr];
+    const otras = Object.keys(d||{}).filter(tc => tc.slice(0,1)===mias && tc!==nodoCartas(M.terr));
+    if(!otras.length){ av.classList.add("hide"); return; }
+    av.classList.remove("hide");
+    av.innerHTML = "Hay <b>"+otras.length+" mesa"+(otras.length===1?"":"s")+" más</b> trabajando "+
+      esc(M.terr)+". No hay problema: cada mesa guarda sus propias cartas y quien facilita las ve todas, "+
+      "una al lado de la otra. Escriban las suyas sin mirar las de la otra mesa.";
+  });
 }
 function sincronizarMesa(){
-  pararVotos();
+  pararVotos(); avisarOtrasMesas();
   if(!haySync || !M.terr) return;
   pararVotos = escuchar("/votos", d=>{
     const antes = M.votos.length;
@@ -1164,7 +1217,7 @@ function agendarSubidaCartas(){
     M.cartas.forEach((c,i)=>{ if(c.cW||c.cP) paq[i] = {cW:c.cW||"", cP:c.cP||"", razon:c.razon||"",
       razon2:c.razon2||"", sep:!!separado(c), fuente:c.fuente||"", fuente2:c.fuente2||"", nd:!!c.nodeacuerdo}; });
     const ind = $("#mSync"); if(ind) ind.textContent = "guardando…";
-    subir("/cartas/"+TCODE[M.terr], paq).then(ok=>{
+    subir("/cartas/"+nodoCartas(M.terr), paq).then(ok=>{
       if(!ind) return;
       ind.textContent = ok ? "guardado ✓ · ya está en la consolidación"
                            : "sin conexión · copien el bloque de respaldo";
@@ -1344,7 +1397,7 @@ function mCards(){
         if(!seSepara(c)){
           const un = el("button","linkish","← Volver a un solo porqué para los dos sectores");
           un.onclick=()=>{
-            if((c.razon2||"").trim() && !confirm("Se borra lo escrito para Protección, ICLA y Educación. ¿Seguir?")) return;
+            if((c.razon2||"").trim() && !confirm("Se borra lo escrito para Protección: ICLA y Educación. ¿Seguir?")) return;
             c.sep=false; c.razon2=""; c.fuente2="";
             save("mesa",M); agendarSubidaCartas(); mCards();
           };
@@ -1371,6 +1424,7 @@ function mCards(){
         const fw=el("div","chips");
         FUENTES.forEach(([k,lbl])=>{
           const bt=el("button","chip",lbl); bt.setAttribute("aria-pressed", c[destino]===k);
+          if(FAYUDA[k]) bt.title = FAYUDA[k];
           bt.onclick=()=>{ c[destino] = c[destino]===k?"":k; save("mesa",M); agendarSubidaCartas(); mCards(); };
           fw.appendChild(bt);
         });
@@ -1444,6 +1498,11 @@ function sobreData(){
   if(SOBRE_B64){ try{ return normalizarSobre(JSON.parse(b64d(SOBRE_B64))); }catch(e){} }
   return null;
 }
+/* Identificadores de las mesas que han escrito algo en ese territorio,
+   en orden estable. Su posición aquí es el «número de mesa». */
+function mesasDe(t){
+  return [...new Set(F.cartas.filter(x=>x.terr===t).map(x=>x.mid))].sort();
+}
 function consolidate(){
   const rows=[];
   CRIT.forEach((c,ci)=>{
@@ -1469,8 +1528,27 @@ function consolidate(){
       const w=cell.sect[0], p=cell.sect[1];
       /* distancia entre sectores, en peldaños de la escala de cinco */
       cell.distVoto = (w.peso&&p.peso) ? Math.abs(w.peso-p.peso) : null;
-      const cs = F.cartas.filter(x=>x.terr===t && x.i===ci);
-      cell.carta = cs.length ? cs[cs.length-1] : null;
+      /* Todas las mesas que escribieron esta casilla. El número de mesa se
+         asigna por orden alfabético del identificador, para que sea el mismo
+         en cualquier pantalla. */
+      const mesasT = mesasDe(t);
+      const cs = F.cartas.filter(x=>x.terr===t && x.i===ci)
+                         .map(x=>Object.assign({nMesa: mesasT.indexOf(x.mid)+1}, x))
+                         .sort((a,b)=>a.nMesa-b.nMesa);
+      cell.cartas = cs;
+      cell.variasMesas = mesasT.length>1;
+      cell.carta = cs.length ? cs[0] : null;
+      /* Distancia entre lo que acordaron dos mesas del mismo territorio. */
+      cell.distMesas = null;
+      if(cs.length>1){
+        let d=0;
+        cs.forEach(a=>cs.forEach(b=>{
+          [["cW"],["cP"]].forEach(([f])=>{
+            if(PESO[a[f]] && PESO[b[f]]) d = Math.max(d, Math.abs(PESO[a[f]]-PESO[b[f]]));
+          });
+        }));
+        cell.distMesas = d;
+      }
       const k = cell.carta;
       const pw = k?(PESO[k.cW]||0):0, pp = k?(PESO[k.cP]||0):0;
       cell.dist = (pw&&pp) ? Math.abs(pw-pp) : (k ? null : cell.distVoto);
@@ -1515,12 +1593,16 @@ function hotOf(cell){
   /* 1 · Lo que la sala puede resolver hoy, sin depender de nadie más.
      En una escala de cinco, tres peldaños es un desacuerdo real; uno o dos
      son matiz y se registran sin ocupar el plenario. */
+  if(cell.distMesas>=2)
+    return [1,"Las "+(cell.cartas||[]).length+" mesas de "+cell.terr+" no acordaron lo mismo",
+      "Trabajaron el mismo territorio y sus notas quedan a "+cell.distMesas+
+      " peldaños. Mismo terreno, dos lecturas: es la conversación más útil que puede tener esta sala."];
   if(salto>=2.5)
     return [1,"La mesa acordó algo muy distinto de lo que votó su gente",
       "El promedio de lo que pusieron solos y lo que acordaron juntos están a "+num(salto)+" peldaños de distancia. Puede ser una deliberación que corrigió la primera impresión, o una voz que se impuso. Solo ellos pueden decirlo."];
   if(cell.dist>=3)
     return [1,"Los dos sectores se comportaron muy distinto",
-      "La misma mesa puso WASH y Alojamiento a "+cell.dist+" peldaños de Protección, ICLA y Educación. No es una contradicción —los sectores pueden ir distinto— pero sí obliga a decidir si este criterio se escribe con una nota o con dos. "+(k.razon2?"Dicen: ":"")];
+      "La misma mesa puso WASH y Alojamiento a "+cell.dist+" peldaños de Protección: ICLA y Educación. No es una contradicción —los sectores pueden ir distinto— pero sí obliga a decidir si este criterio se escribe con una nota o con dos. "+(k.razon2?"Dicen: ":"")];
   if(k.cW==="G" || k.cP==="G")
     return [2,"La mesa entera dijo que no le consta",
       "No es que no alcanzaran: declararon un vacío. Es el tipo de cosa que el informe tiene que decir en voz alta en vez de rellenar. "+
@@ -1543,7 +1625,7 @@ function hotOf(cell){
     const flojo = f => f==="CZ" || f==="CO";
     const fs = [];
     if(flojo(k.fuente))  fs.push((k.fuente2 && k.fuente2!==k.fuente ? "en WASH y Alojamiento, " : "")+"«"+(FLBL[k.fuente]||k.fuente).toLowerCase()+"»");
-    if(flojo(k.fuente2) && k.fuente2!==k.fuente) fs.push("en Protección, ICLA y Educación, «"+(FLBL[k.fuente2]||k.fuente2).toLowerCase()+"»");
+    if(flojo(k.fuente2) && k.fuente2!==k.fuente) fs.push("en Protección: ICLA y Educación, «"+(FLBL[k.fuente2]||k.fuente2).toLowerCase()+"»");
     if(fs.length)
       return [3,"Sustento por confirmar",
         "La carta se sostiene "+fs.join(" y ")+". Sirve igual, pero conviene saber si hay algo detrás antes de apoyarse en ella."];
@@ -1586,7 +1668,7 @@ function renderPlenario(rows){
       html += '<div class="plen-col" style="--sc:'+SCOL[si]+'">'+
         '<div class="plen-sec">'+esc(sec[0])+'</div>'+
         '<div class="lbl">cómo lo puso su gente · el número dentro del círculo es cuántas personas</div>'+regla(sc,true)+
-        '<div class="plen-num"><span class="lbl">lo que acordó la mesa</span>'+
+        '<div class="plen-num"><span class="lbl">lo que acordó la mesa'+((r.cartas||[]).length>1?' 1':'')+'</span>'+
           (nota?pill(nota):'<span class="pnone">—</span>')+'</div>'+
         (razonReal?'<div class="plen-raz">«'+esc(razonReal)+'»</div>':'')+
         (fte?'<div class="lbl">'+esc(FLBL[fte]||fte)+'</div>':'')+
@@ -1594,7 +1676,8 @@ function renderPlenario(rows){
     });
     html += '</div>';
 
-    if(k && k.nodeacuerdo) html += '<div class="plen-av">La mesa dejó declarado que no se puso de acuerdo.</div>';
+    html += otrasMesasHTML(r);
+    if(k && k.nodeacuerdo) html += '<div class="plen-av">La mesa '+(r.cartas.length>1?"1 ":"")+'dejó declarado que no se puso de acuerdo.</div>';
     if((r.notas||[]).length)
       html += '<div class="notacard"><b>'+r.notas.length+' nota'+(r.notas.length===1?"":"s")+
               ' de la Ronda 1</b>'+r.notas.map(x=>"«"+esc(x)+"»").join("<br>")+'</div>';
@@ -1636,6 +1719,25 @@ function renderPlenario(rows){
    Arma un documento completo: las casillas elegidas, cómo votó la gente en
    las dieciocho casillas, las cartas de las mesas y las notas de la Ronda 1.
    El mismo contenido sirve para la proyección y para el archivo. */
+/* Cuando dos mesas trabajaron el mismo territorio, la primera va en las dos
+   columnas y las demás quedan acá abajo, completas. Ninguna se pierde. */
+function otrasMesasHTML(r){
+  const cs = r.cartas || [];
+  if(cs.length<2) return "";
+  let h = '<div class="otrasm"><b>El mismo territorio lo trabajaron '+cs.length+' mesas</b>';
+  cs.forEach((c,j)=>{
+    h += '<div class="otram"><span class="mtag">m'+c.nMesa+'</span>'+
+         '<span class="small">'+esc(SECT[0][0])+'</span> '+(c.cW?pill(c.cW):'<span class="pnone">—</span>')+
+         ' <span class="small">'+esc(SECT[1][0])+'</span> '+(c.cP?pill(c.cP):'<span class="pnone">—</span>')+
+         (c.nodeacuerdo?' <b style="color:var(--crimson);font-size:12.5px">sin acuerdo</b>':'')+
+         (c.razon?'<div class="otrar">«'+esc(c.razon)+'»'+(c.razon2?' · «'+esc(c.razon2)+'»':'')+'</div>':'')+
+         (fuenteTxt(c)?'<div class="lbl">'+fuenteTxt(c)+'</div>':'')+
+         '</div>';
+  });
+  if(r.distMesas>=2) h += '<div class="otraav">Están a '+r.distMesas+
+    ' peldaños de distancia. Vale la pena preguntar por qué antes de escribir una sola nota.</div>';
+  return h + '</div>';
+}
 /* Regla de 1 a 5 con el promedio marcado y un punto por cada nota que alguien
    puso. Dice lo mismo que el histograma en un tercio del alto. */
 function regla(sc, grande){
@@ -1684,13 +1786,14 @@ function contenidoPlenario(rows){
         const fte = si===0 ? (k&&k.fuente) : (k && (k.fuente2||k.fuente));
         h += '<div class="plen-col" style="--sc:'+SCOL[si]+'"><div class="plen-sec">'+esc(sec[0])+'</div>'+
              '<div class="lbl">cómo lo puso su gente · el número dentro del círculo es cuántas personas</div>'+regla(sc,true)+
-             '<div class="plen-num"><span class="lbl">lo que acordó la mesa</span>'+
+             '<div class="plen-num"><span class="lbl">lo que acordó la mesa'+((r.cartas||[]).length>1?' 1':'')+'</span>'+
              (nota?pill(nota):'<span class="pnone">—</span>')+'</div>'+
              (razonReal?'<div class="plen-raz">«'+esc(razonReal)+'»</div>':'')+
              (fte?'<div class="lbl">'+esc(FLBL[fte]||fte)+'</div>':'')+'</div>';
       });
       h += '</div>';
-      if(k && k.nodeacuerdo) h += '<div class="plen-av">La mesa dejó declarado que no se puso de acuerdo.</div>';
+      h += otrasMesasHTML(r);
+      if(k && k.nodeacuerdo) h += '<div class="plen-av">La mesa '+(r.cartas.length>1?"1 ":"")+'dejó declarado que no se puso de acuerdo.</div>';
       if((r.notas||[]).length)
         h += '<div class="notacard"><b>'+r.notas.length+' nota'+(r.notas.length===1?"":"s")+
              ' de la Ronda 1</b>'+r.notas.map(x=>"«"+esc(x)+"»").join("<br>")+'</div>';
@@ -1742,11 +1845,15 @@ function sincronizarFac(){
       .filter(([id,x])=>x && TFROM[TCODE[x.t]] && typeof x.v==="string" && x.v.length===12)
       .map(([id,x])=>({terr:x.t, vals:x.v.split(""), code:x.c||id, id, notas:x.n||null}));
     F.cartas = [];
+    /* La clave es «territorio + mesa»: pueden venir dos mesas del mismo
+       territorio y las dos cuentan. Los nodos viejos, de una sola letra,
+       se siguen leyendo. */
     Object.entries(k).forEach(([tc,paq])=>{
-      const t = TFROM[tc]; if(!t) return;
+      const t = TFROM[tc.slice(0,1)]; if(!t) return;
+      const mid = tc.slice(1) || "-";
       Object.entries(paq||{}).forEach(([i,c])=>{
         if(!c || (!c.cW && !c.cP)) return;
-        F.cartas.push({terr:t, i:+i, cW:c.cW||"", cP:c.cP||"", razon:c.razon||"",
+        F.cartas.push({terr:t, mid, i:+i, cW:c.cW||"", cP:c.cP||"", razon:c.razon||"",
                        razon2:c.razon2||"", sep:!!c.sep, fuente:c.fuente||"", fuente2:c.fuente2||"", nodeacuerdo:!!c.nd});
       });
     });
@@ -1770,7 +1877,7 @@ function renderFac(){
   // mapa
   let h="<tr><th rowspan='2'>Criterio</th><th rowspan='2'>Territorio</th>"+
     "<th colspan='2' style='background:var(--steel)'>WASH y Alojamiento</th>"+
-    "<th colspan='2' style='background:#6E9E4A'>Protección, ICLA y Educación</th>"+
+    "<th colspan='2' style='background:#6E9E4A'>Protección: ICLA y Educación</th>"+
     "<th rowspan='2' title='Peldaños de diferencia entre la nota de WASH/Alojamiento y la de Protección/ICLA/Educación en la carta de la mesa'>Distancia<br>entre sectores</th><th rowspan='2'>Lo sé por</th><th rowspan='2' title='Lectura provisional del equipo evaluador. Es una hipótesis de trabajo, no el veredicto del informe.'>Nuestra<br>lectura</th></tr>"+
     "<tr><th class='sub' style='background:#5C7E92' title='Promedio de las notas que pusieron todas las personas de ese territorio en ese sector. G y NA no entran en el promedio. Pase el cursor por la celda para ver el reparto.'>promedio</th>"+
     "<th class='sub' style='background:#5C7E92'>la mesa</th>"+
@@ -1786,12 +1893,24 @@ function renderFac(){
     const tit = sc => sc.n ? (" title='"+sc.n+" persona"+(sc.n===1?"":"s")+" votó este sector: "+cuentas(sc)+
                               (sc.prom!=null ? " · promedio de las notas: "+(Math.round(sc.prom*100)/100).toString().replace(".",",") : "")+"'") : "";
     const nW=tit(r.sect[0]), nP=tit(r.sect[1]);
+    /* Si dos mesas trabajaron el mismo territorio, la casilla muestra las dos:
+       nunca se descarta una en silencio. */
+    const cs = r.cartas||[];
+    const mesaTd = f => !cs.length ? "<td class='cnone'>—</td>"
+      : cs.length===1 ? (cs[0][f] ? cellTd(cs[0][f]) : "<td class='cnone'>—</td>")
+      : "<td class='multi'>"+cs.map(c=>'<span class="mtag" title="Mesa '+c.nMesa+' de '+esc(r.terr)+'">m'+c.nMesa+'</span>'+
+          (c[f]?pill(c[f]):'<span class="pnone">—</span>')).join("")+"</td>";
+    const fteTxt = cs.length>1
+      ? cs.map(c=>'<span class="mtag">m'+c.nMesa+'</span>'+(fuenteTxt(c)||"—")+
+                  (c.nodeacuerdo?" <b style='color:var(--crimson)'>sin acuerdo</b>":"")).join("<br>")
+      : (k?fuenteTxt(k):"")+(k&&k.nodeacuerdo?" <b style='color:var(--crimson)'>· sin acuerdo</b>":"");
     h+="<tr><td class='k'>"+esc(r.crit)+"</td>"+
-       "<td class='tcell' style='--tc:"+TCOLOR[r.terr]+"'>"+esc(r.terr)+"</td>"+
-       promTd(r.sect[0],nW)+(k&&k.cW?cellTd(k.cW):"<td class='cnone'>—</td>")+
-       promTd(r.sect[1],nP)+(k&&k.cP?cellTd(k.cP):"<td class='cnone'>—</td>")+
+       "<td class='tcell' style='--tc:"+TCOLOR[r.terr]+"'>"+esc(r.terr)+
+         (cs.length>1?" <span class='small'>· "+cs.length+" mesas</span>":"")+"</td>"+
+       promTd(r.sect[0],nW)+mesaTd("cW")+
+       promTd(r.sect[1],nP)+mesaTd("cP")+
        "<td style='text-align:center'>"+br+"</td>"+
-       "<td class='small'>"+(k?fuenteTxt(k):"")+(k&&k.nodeacuerdo?" <b style='color:var(--crimson)'>· sin acuerdo</b>":"")+"</td>"+
+       "<td class='small'>"+fteTxt+"</td>"+
        (F.sobreOpen&&r.sobre?cellTd(r.sobre.c):"<td class='cnone'>✉︎</td>")+"</tr>";
   });
   $("#fTable").innerHTML=h;
@@ -1837,10 +1956,21 @@ function renderFac(){
 
   // cartas
   const cv=$("#fCartas"); cv.innerHTML="";
+  const paresTM = [];
   TERR.forEach(t=>{
-    const got = rows.filter(r=>r.terr===t && r.carta);
+    const ms = mesasDe(t);
+    if(!ms.length) paresTM.push([t,null,0,1]);
+    else ms.forEach((mid,j)=>paresTM.push([t,mid,j+1,ms.length]));
+  });
+  paresTM.forEach(([t,mid,nMesa,nTotal])=>{
+    const got = rows.map(r=>{
+      const c = (r.cartas||[]).find(x=>x.mid===mid);
+      return c ? Object.assign({}, r, {carta:c}) : null;
+    }).filter(x=>x && x.terr===t);
     const d=el("div","card");
-    d.appendChild(el("div",null,"<div style='font-weight:800;font-size:16px;margin-bottom:6px'>Mesa · "+esc(t)+" <span style='color:var(--mut);font-weight:600'>"+got.length+" de 6</span></div>"));
+    const titulo = nTotal>1 ? "Mesa "+nMesa+" · "+esc(t) : "Mesa · "+esc(t);
+    d.appendChild(el("div",null,"<div style='font-weight:800;font-size:16px;margin-bottom:6px'>"+titulo+
+      " <span style='color:var(--mut);font-weight:600'>"+got.length+" de 6</span></div>"));
     if(!got.length) d.appendChild(el("p","small","Sin cartas todavía."));
     const notasT = {};
     F.votes.filter(v=>v.terr===t && v.notas).forEach(v=>{
@@ -2037,21 +2167,29 @@ $("#sobreLoad").onclick = ()=>{
 };
 $("#fCsv").onclick = ()=>{
   const rows=consolidate();
-  const head=["Criterio","Territorio","Promedio_WASH_Aloj","n_WA","Mesa_WASH_Aloj","Promedio_Prot_ICLA_Educ","n_PIE","Mesa_Prot_ICLA_Educ","Distancia_entre_sectores_en_peldanos","Porque_compartido_o_WASH_Aloj","Porque_Prot_ICLA_Educ","Lo_se_por","Lo_se_por_Prot_ICLA_Educ","Sin_acuerdo","Notas_ronda1","Nuestra_lectura","Por_que_conversarla","Al_plenario","Lo_que_se_acordo_en_la_sala"];
+  /* Formato largo: una fila por carta. Si dos mesas trabajaron el mismo
+     territorio, salen las dos filas, con los mismos promedios y la columna
+     «Mesa» para distinguirlas. */
+  const head=["Criterio","Territorio","Mesa","Mesas_en_el_territorio","Promedio_WASH_Aloj","n_WA","Mesa_WASH_Aloj","Promedio_Prot_ICLA_Educ","n_PIE","Mesa_Prot_ICLA_Educ","Distancia_entre_sectores_en_peldanos","Distancia_entre_mesas_en_peldanos","Porque_compartido_o_WASH_Aloj","Porque_Prot_ICLA_Educ","Lo_se_por","Lo_se_por_Prot_ICLA_Educ","Sin_acuerdo","Notas_ronda1","Nuestra_lectura","Por_que_conversarla","Al_plenario","Lo_que_se_acordo_en_la_sala"];
   const q = t => '"'+String(t||"").replace(/"/g,"'")+'"';
   const lines=[head.join(";")];
   rows.forEach(r=>{
-    const h=hotOf(r), k=r.carta;
-    lines.push([r.crit,r.terr,
-      r.sect[0].prom==null?"":(Math.round(r.sect[0].prom*100)/100), r.sect[0].n, k?k.cW:"",
-      r.sect[1].prom==null?"":(Math.round(r.sect[1].prom*100)/100), r.sect[1].n, k?k.cP:"",
-      r.dist==null?"":String(r.dist),
-      k?q(k.razon):"", k?q(k.razon2):"",
-      k&&k.fuente?(FLBL[k.fuente]||k.fuente):"", k&&k.fuente2?(FLBL[k.fuente2]||k.fuente2):"",
-      k&&k.nodeacuerdo?"si":"", q((r.notas||[]).join("  ||  ")),
-      r.sobre?r.sobre.c:"", h?h[0]+" · "+h[1]:"",
-      F.debate.indexOf(r.crit+"|"+r.terr)>=0?"si":"",
-      q(((F.conclusiones||{})[r.crit+"|"+r.terr])||"")].join(";"));
+    const h=hotOf(r);
+    const cs = (r.cartas && r.cartas.length) ? r.cartas : [null];
+    cs.forEach(k=>{
+      lines.push([r.crit,r.terr,
+        k?k.nMesa:"", (r.cartas||[]).length,
+        r.sect[0].prom==null?"":(Math.round(r.sect[0].prom*100)/100), r.sect[0].n, k?k.cW:"",
+        r.sect[1].prom==null?"":(Math.round(r.sect[1].prom*100)/100), r.sect[1].n, k?k.cP:"",
+        r.dist==null?"":String(r.dist),
+        r.distMesas==null?"":String(r.distMesas),
+        k?q(k.razon):"", k?q(k.razon2):"",
+        k&&k.fuente?(FLBL[k.fuente]||k.fuente):"", k&&k.fuente2?(FLBL[k.fuente2]||k.fuente2):"",
+        k&&k.nodeacuerdo?"si":"", q((r.notas||[]).join("  ||  ")),
+        r.sobre?r.sobre.c:"", h?h[0]+" · "+h[1]:"",
+        F.debate.indexOf(r.crit+"|"+r.terr)>=0?"si":"",
+        q(((F.conclusiones||{})[r.crit+"|"+r.terr])||"")].join(";"));
+    });
   });
   saveFile("tablero_COFM2308.csv", "﻿"+lines.join("\n"));
 };
@@ -2086,7 +2224,7 @@ else {
   const txt = {
     hHero: "Antes de abrir nuestra lectura queremos la de ustedes. Primero cada quien valora su propio territorio separando dos bloques sectoriales; después las mesas escriben por qué. Todo viaja solo entre los tres pasos: nadie copia ni pega nada.",
     hRol1: "Mi territorio, doce casillas, siete minutos. Al terminar presiono Enviar y le llega a mi mesa.",
-    hRol2: "Los tableros de mi mesa llegan solos. Escribimos seis cartas: una nota por sector, la razón y de dónde lo sabemos.",
+    hRol2: "Los tableros de nuestra mesa llegan solos. Escribimos seis cartas: una nota por sector, la razón y de dónde lo sabemos.",
     hRol3: "Para quien facilita. El mapa se arma en vivo con lo que van enviando, y de ahí sale dónde conviene conversar.",
     pE1t: "Enviado. Su tablero ya está con su mesa",
     pE1s: "No lleva su nombre: solo el territorio y las doce notas. El código de abajo es el respaldo, por si la conexión falla.",
