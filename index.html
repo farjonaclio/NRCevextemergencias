@@ -503,6 +503,7 @@ td.multi>span.mtag:first-child{margin-left:0}
     <div class="nav">
       <button class="btn ghost" id="pPrev">Atrás</button>
       <button class="btn" id="pNext">Siguiente</button>
+      <span class="small" id="pListo"></span>
       <div class="spacer"></div>
       <span class="small" id="pTerrTag"></span>
     </div>
@@ -530,6 +531,7 @@ td.multi>span.mtag:first-child{margin-left:0}
       <button class="btn teal" id="pCopy">Copiar el código</button>
       <button class="btn ghost" id="pEdit">Corregir mi tablero</button>
       <button class="btn ghost" id="pOtra">Otra persona vota aquí</button>
+      <button class="btn ghost" id="pMesa">Ir a la pantalla de la mesa</button>
     </div>
     <p class="small" style="margin-top:12px" id="pPie">Puede corregir y generar otro: vale el último. La mesa los junta todos y los manda en un solo bloque, así que usted no tiene que hacer nada más.</p>
   </div>
@@ -552,6 +554,7 @@ td.multi>span.mtag:first-child{margin-left:0}
     <h2 style="margin-top:2px" id="mVTit">¿Quiénes están en esta mesa?</h2>
     <p class="lead" id="mVLead">Cada persona de la mesa acaba de llenar su tablero y tiene un código de catorce letras. Recójanlos aquí: van a ver, casilla por casilla, qué puso cada quien antes de acordar la nota.</p>
     <div id="mVList"></div>
+    <div class="nav"><button class="linkish" id="mVerMan" style="margin:0">¿Alguien sin conexión? Meter un código a mano</button></div>
     <details id="mVMan"><summary>Meter un código a mano · si alguien no tiene conexión</summary>
       <textarea id="mVIn" rows="3" placeholder="Escriban o peguen los códigos, uno por línea o separados por espacios…"></textarea>
       <div class="nav">
@@ -562,6 +565,7 @@ td.multi>span.mtag:first-child{margin-left:0}
   </div>
 
   <div id="mForm" class="hide">
+    <div class="nav" style="margin:0 0 10px"><button class="linkish" id="mVolverV" style="margin:0">Ver los tableros de la mesa · meter un código</button></div>
     <div class="notice"><b>La única regla dura:</b> una casilla con nota y sin razón no entra al informe. El porqué puede ir compartido o separado por sector: ese botón está siempre en la carta, y si las dos notas les quedan lejos se separa solo — esa línea es la que más nos sirve.</div>
     <div id="mCards"></div>
     <div class="mbar">
@@ -699,10 +703,10 @@ const CRIT = [
    "¿Qué habría pasado en su territorio si el NRC no hubiera estado en ese espacio de coordinación?"],
   ["Efectividad","¿Se lograron los resultados previstos para la población afectada?",
    "Si lo que se prometió llegó, a tiempo y con la calidad esperada.",
-   "Si tuviera que mostrarle al donante una sola evidencia de que funcionó en su territorio, ¿cuál sería? ¿Y una de que no alcanzó?"],
+   "Si tuviera que mostrarle al donante una sola evidencia de que funcionó en su territorio, ¿cuál sería?"],
   ["Eficiencia","¿Los recursos se usaron de forma oportuna y proporcionada al resultado?",
    "Si el resultado justificó lo que costó en tiempo, gente y logística. Sin datos financieros solo se puede hablar de tiempo y capacidad.",
-   "Sin hablar de presupuesto: ¿dónde se perdió más tiempo o más capacidad logística en su territorio, y por qué?"],
+   "¿Dónde se usaron más tiempo o más capacidad logística en su territorio, con o sin los resultados esperados?"],
   ["Multisectorialidad","¿Los sectores operaron como una sola respuesta?",
    "Si a un mismo hogar le llegó un paquete articulado, o varias ayudas sueltas que coincidieron en el tiempo.",
    "¿La gente de su territorio recibió una respuesta o varias ayudas sueltas? ¿En qué se nota la diferencia?"],
@@ -1041,22 +1045,19 @@ function goStep(){
   $("#pAyuda").open = false;
   $("#pAyuda").querySelector("summary").textContent = "¿Qué quiere decir "+CRIT[i][0]+"?";
   $("#pAyudaDef").textContent = CRIT[i][2];
-  $("#pAyudaQ").innerHTML = "<b>Si se traba, piense en esto:</b> "+esc(CRIT[i][3]);
+  $("#pAyudaQ").innerHTML = "<b>Una pregunta para apoyar la reflexión:</b> "+esc(CRIT[i][3]);
   const box=$("#pSectors"); box.innerHTML="";
   SECT.forEach((s,si)=>{
     const d=el("div","sector");
     d.style.borderTopColor = si===0 ? "var(--steel)" : "#6E9E4A";
     d.appendChild(el("h4",null,'<span class="sdot" style="background:'+(si===0?"var(--steel)":"#6E9E4A")+'"></span>'+esc(s[0])));
     d.appendChild(el("p","sub",esc(s[1])));
+    /* Marcar no cambia de pantalla. Antes saltaba solo al completar los dos
+       sectores, y eso atropellaba a quien iba a escribir una nota: el criterio
+       se cierra cuando la persona presiona «Siguiente», no antes. */
     const marcar = v => ()=>{
-      /* Si el criterio ya estaba completo, la persona está corrigiendo:
-         ahí no se salta, porque saltar en medio de una corrección desorienta. */
-      const estabaCompleto = P.vals[i*2]!=="" && P.vals[i*2+1]!=="";
       P.vals[i*2+si] = (P.vals[i*2+si]===v ? "" : v);
       save("part",P); goStep();
-      const quedaCompleto = P.vals[i*2]!=="" && P.vals[i*2+1]!=="";
-      if(!estabaCompleto && quedaCompleto && i<5)
-        setTimeout(()=>{ P.step=i+1; goStep(); alTope(); }, 420);
     };
     const fila = (lista, cls)=>{
       if(cls==="fuera") d.appendChild(el("div","fueralbl","Fuera de la escala"));
@@ -1092,6 +1093,11 @@ function goStep(){
     ? "Su mesa la va a ver junto a esta casilla. No lleva su nombre."
     : "Sin conexión las notas no viajan: el código solo lleva las doce notas numéricas.";
   $("#pPrev").disabled = i===0;
+  /* Señal de que el criterio quedó completo, sin moverle la pantalla a nadie. */
+  const listo = P.vals[i*2]!=="" && P.vals[i*2+1]!=="";
+  $("#pNext").classList.toggle("teal", listo);
+  $("#pListo").textContent = !listo ? ""
+    : (i===5 ? "Los seis criterios listos" : "Criterio listo · si quiere, deje una nota antes de seguir");
   $("#pNext").textContent = i===5 ? "Revisar" : "Siguiente";
   $("#pTerrTag").textContent = P.vals.filter(v=>v!=="").length + " de 12";
 }
@@ -1115,6 +1121,9 @@ function review(){
                           : (haySync ? "Enviar mi tablero a la mesa" : "Generar mi código");
 }
 $("#pBack").onclick = ()=>{ P.step=0; goStep(); };
+/* La misma tableta suele pasar de votar a ser la mesa. Antes había que
+   buscar «Inicio» arriba; ahora el paso está donde termina el voto. */
+$("#pMesa").onclick = ()=>{ show("vMesa"); renderMesa(); alTope(); };
 $("#pCode").onclick = async ()=>{
   const code = encodeVote(P.terr, P.vals);
   $("#pReview").classList.add("hide"); $("#pDone").classList.remove("hide");
@@ -1250,6 +1259,18 @@ $("#mStart").onclick = ()=>{
   }
 };
 function irACartas(){ $("#mVotos").classList.add("hide"); $("#mForm").classList.remove("hide"); mCards(); }
+/* Volver a la lista de tableros con las cartas ya empezadas: sirve para ver
+   quiénes llegaron y para meter el código de alguien que se conectó tarde. */
+function verTableros(){
+  $("#mForm").classList.add("hide"); $("#mVotos").classList.remove("hide");
+  mVotosList(); alTope();
+}
+$("#mVolverV").onclick = verTableros;
+$("#mVerMan").onclick = ()=>{
+  const d=$("#mVMan"); d.classList.remove("hide"); d.open=true;
+  d.scrollIntoView({block:"center",behavior:"smooth"});
+  setTimeout(()=>{ const t=$("#mVIn"); if(t) t.focus(); }, 320);
+};
 $("#mVSkip").onclick = irACartas;
 $("#mVAdd").onclick = ()=>{
   const {votes, bad} = parsePaste($("#mVIn").value||"");
@@ -1326,7 +1347,7 @@ function mCards(){
         const ay = el("details","ayuda");
         ay.innerHTML = "<summary>¿Qué quiere decir "+esc(crit[0])+"?</summary>"+
           "<p>"+esc(crit[2])+"</p>"+
-          "<p><b>Si la mesa se traba, pregunten esto:</b> "+esc(crit[3])+"</p>";
+          "<p><b>Una pregunta para apoyar la reflexión:</b> "+esc(crit[3])+"</p>";
         body.appendChild(el("p","critq",esc(crit[1])));
         body.appendChild(ay);
       }
@@ -2227,13 +2248,15 @@ $$(".tab").forEach(t=>t.onclick=()=>{
 /* arranque */
 show("vHome");
 if(!haySync){ document.querySelectorAll(".neti").forEach(n=>n.classList.add("oculto"));
-  ["#fPeligro","#fCambiar","#hCambiar","#fVerMan"].forEach(sel=>{ const e=$(sel); if(e) e.classList.add("hide"); });
+  ["#fPeligro","#fCambiar","#hCambiar","#fVerMan","#mVerMan"].forEach(sel=>{ const e=$(sel); if(e) e.classList.add("hide"); });
   ["#mVMan","#fMan"].forEach(sel=>{ const mv=$(sel); if(mv){ mv.open=true; const sm=mv.querySelector("summary"); if(sm) sm.remove(); } });
 }
 else {
   marcarRed(false);
   const n=$("#fNota"); if(n) n.textContent = "Todo llega solo a esta pantalla. El recuadro de arriba queda por si alguien se queda sin conexión y hay que meter su código a mano.";
   ["#mVMan","#fMan"].forEach(sel=>{ const mv=$(sel); if(mv){ mv.open=false; mv.classList.add("hide"); } });
+  /* Escondido, pero siempre alcanzable: los enlaces «¿Alguien sin conexión?»
+     lo vuelven a abrir en la mesa y en la consolidación. */
   const txt = {
     hHero: "Antes de abrir nuestra lectura queremos la de ustedes. Primero cada quien valora su propio territorio separando dos bloques sectoriales; después las mesas escriben por qué. Todo viaja solo entre los tres pasos: nadie copia ni pega nada.",
     hRol1: "Mi territorio, doce casillas, siete minutos. Al terminar presiono Enviar y le llega a mi mesa.",
