@@ -479,7 +479,7 @@ label.fld em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:
   </div>
 
   <div id="tabMapa">
-    <p class="small" style="margin-top:12px">La escala va de <b>1 · bajo</b> a <b>5 · alto</b> en grado de cumplimiento. «Voto» es lo que puso cada persona sola; «Mesa» es lo que acordaron, con su razón escrita. «Nuestra lectura» aparece solo cuando usted abra el sobre.</p>
+    <p class="small" style="margin-top:12px">La escala va de <b>1 · bajo</b> a <b>5 · alto</b> en grado de cumplimiento. <b>Lo más votado</b> es la nota que más se repitió entre todas las personas de ese territorio en la Ronda 1 —no es un promedio ni un voto individual—; pase el cursor por la celda para ver cuántas votaron y cómo se repartieron. <b>La mesa</b> es lo que acordaron juntas, con su razón escrita. <b>Nuestra lectura</b> aparece solo cuando usted abra el sobre.</p>
     <div class="scroll"><table id="fTable"></table></div>
   </div>
 
@@ -863,7 +863,7 @@ $("#pEdit").onclick = ()=>review();
 
 /* ═══════════════════════════ mesa ═══════════════════════════ */
 const SCOL = ["var(--steel)", "#6E9E4A"];
-const MVALS = ESC.concat([["X","No operó"]]);
+const MVALS = ESC.concat([["G","No nos consta"],["X","No operó aquí"]]);
 
 function renderMesa(){
   const wrap=$("#mTerrChips"); wrap.innerHTML="";
@@ -984,6 +984,7 @@ function mVotosList(){
 
 const seSepara = c => !!(c.cW && c.cP && c.cW!==c.cP);      // los COLORES quedaron distintos
 const separado = c => seSepara(c) || !!c.sep;                // el PORQUÉ va por sector
+const hayG = c => c.cW==="G" || c.cP==="G";
 const cartaLista = c => (c.cW||c.cP) && (c.razon||"").trim() && (!separado(c) || (c.razon2||"").trim());
 
 function mCards(){
@@ -1023,7 +1024,6 @@ function mCards(){
         const ponerFila = (lista, cls)=>{
           if(cls==="fuera") row.appendChild(el("div","fueralbl","Fuera de la escala"));
           const o = el("div","opts"+(cls?" "+cls:""));
-          if(cls==="fuera") o.style.gridTemplateColumns="1fr";
           lista.forEach(([v,lbl])=>{
             const bt=el("button","opt",(v==="X"?"NA":v)+"<small>"+esc(lbl)+"</small>");
             bt.dataset.v=v; bt.setAttribute("aria-pressed", c[key]===v);
@@ -1033,7 +1033,7 @@ function mCards(){
           row.appendChild(o);
         };
         ponerFila(ESC);
-        ponerFila([["X","No operó aquí"]], "fuera");
+        ponerFila([["G","No nos consta"],["X","No operó aquí"]], "fuera");
         body.appendChild(row);
       });
 
@@ -1058,6 +1058,8 @@ function mCards(){
         body.appendChild(ta); body.appendChild(cnt); upd();
       };
 
+      if(hayG(c)) body.appendChild(el("p","aviso-sep",
+        "Declararon que a la mesa no le consta. Eso vale, y es un dato para el informe — pero hay que decir qué haría falta saber: quién lo sabría, qué documento lo diría, qué habría que preguntar. Escríbanlo abajo."));
       if(separado(c)){
         if(seSepara(c)) body.appendChild(el("p","aviso-sep",
           "Las dos notas les quedaron a tres peldaños o más, así que el porqué va por separado."));
@@ -1073,8 +1075,11 @@ function mCards(){
           body.appendChild(un);
         }
       } else {
-        campo("razon", "Porque… (lo que haga falta; con dos frases claras basta)", "", null,
-              "Los kits no variaron con el diagnóstico.");
+        campo("razon",
+              hayG(c) ? "Qué haría falta saber" : "Porque… (lo que haga falta; con dos frases claras basta)",
+              "", null,
+              hayG(c) ? "Nadie de la mesa estuvo en las entregas de enero; lo sabría el equipo de terreno de Mocoa."
+                      : "Los kits no variaron con el diagnóstico.");
         const sp = el("button","linkish","¿El porqué es distinto en cada sector? Sepárenlo →");
         sp.onclick=()=>{ c.sep=true; save("mesa",M); agendarSubidaCartas(); mCards(); };
         body.appendChild(sp);
@@ -1228,6 +1233,10 @@ function hotOf(cell){
   if(cell.dist>=3)
     return [1,"Los dos sectores se comportaron muy distinto",
       "La misma mesa puso WASH y Alojamiento a "+cell.dist+" peldaños de Protección, ICLA y Educación. No es una contradicción —los sectores pueden ir distinto— pero sí obliga a decidir si este criterio se escribe con una nota o con dos. "+(k.razon2?"Dicen: ":"")];
+  if(k.cW==="G" || k.cP==="G")
+    return [2,"La mesa entera dijo que no le consta",
+      "No es que no alcanzaran: declararon un vacío. Es el tipo de cosa que el informe tiene que decir en voz alta en vez de rellenar. "+
+      ((k.razon||"").trim() ? "Falta: " : "")];
   if(k.nodeacuerdo)
     return [2,"La mesa no se puso de acuerdo",
       "El desacuerdo quedó declarado. Vale la pena oírlo entero: dos lecturas conviviendo son un dato, no un empate."];
@@ -1299,15 +1308,19 @@ function renderFac(){
     "<th colspan='2' style='background:var(--steel)'>WASH y Alojamiento</th>"+
     "<th colspan='2' style='background:#6E9E4A'>Protección, ICLA y Educación</th>"+
     "<th rowspan='2' title='Peldaños de diferencia entre la nota de WASH/Alojamiento y la de Protección/ICLA/Educación en la carta de la mesa'>Distancia<br>entre sectores</th><th rowspan='2'>Lo sé por</th><th rowspan='2' title='Lectura provisional del equipo evaluador. Es una hipótesis de trabajo, no el veredicto del informe.'>Nuestra<br>lectura</th></tr>"+
-    "<tr><th class='sub' style='background:#5C7E92'>voto</th><th class='sub' style='background:#5C7E92'>mesa</th>"+
-    "<th class='sub' style='background:#7DAB5C'>voto</th><th class='sub' style='background:#7DAB5C'>mesa</th></tr>";
+    "<tr><th class='sub' style='background:#5C7E92' title='La nota que más se repitió entre todas las personas que votaron ese territorio. Pase el cursor por la celda para ver cuántas votaron.'>lo más votado</th>"+
+    "<th class='sub' style='background:#5C7E92'>la mesa</th>"+
+    "<th class='sub' style='background:#7DAB5C' title='La nota que más se repitió entre todas las personas que votaron ese territorio.'>lo más votado</th>"+
+    "<th class='sub' style='background:#7DAB5C'>la mesa</th></tr>";
   rows.forEach(r=>{
     const k=r.carta;
     const br = (r.dist==null) ? '<span class="pnone">—</span>'
              : (r.dist>=3 ? '<span class="pill" style="background:#FBEEd0;color:#8a6100;border-color:#B57A08" title="Tres peldaños o más: una sola nota estaría tapando dos realidades distintas">'+r.dist+' peldaños</span>'
              : (r.dist===0 ? '<span class="small">igual</span>'
              : '<span class="small">'+r.dist+(r.dist===1?" peldaño":" peldaños")+'</span>'));
-    const nW=r.sect[0].n?(" title='"+r.sect[0].n+" votos'"):"", nP=r.sect[1].n?(" title='"+r.sect[1].n+" votos'"):"";
+    const cuentas = sc => Object.entries(sc.counts).filter(([,v])=>v).map(([k,v])=>(k==="X"?"NA":k)+"×"+v).join("  ");
+    const nW=r.sect[0].n?(" title='"+r.sect[0].n+" personas votaron este sector: "+cuentas(r.sect[0])+"'"):"",
+          nP=r.sect[1].n?(" title='"+r.sect[1].n+" personas votaron este sector: "+cuentas(r.sect[1])+"'"):"";
     h+="<tr><td class='k'>"+esc(r.crit)+"</td>"+
        "<td class='tcell' style='--tc:"+TCOLOR[r.terr]+"'>"+esc(r.terr)+"</td>"+
        cellTd(r.sect[0].dom,nW)+(k&&k.cW?cellTd(k.cW):"<td class='cnone'>—</td>")+
