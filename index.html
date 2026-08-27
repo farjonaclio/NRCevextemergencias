@@ -174,11 +174,11 @@ label.fld em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:
 .stat b{display:block;font-family:var(--disp);font-weight:700;font-size:26px;line-height:1.1;font-variant-numeric:tabular-nums}
 .stat span{font-size:11.5px;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
 
-#mVMan{margin-top:18px;border-top:1px solid var(--line);padding-top:10px}
-#mVMan>summary{cursor:pointer;list-style:none;font-size:13.5px;color:var(--mut);font-weight:600;padding:4px 0}
-#mVMan>summary::-webkit-details-marker{display:none}
-#mVMan>summary:before{content:"▸ ";color:var(--crimson);font-weight:700}
-#mVMan[open]>summary:before{content:"▾ "}
+#mVMan,#fMan{margin-top:18px;border-top:1px solid var(--line);padding-top:10px}
+#mVMan>summary,#fMan>summary{cursor:pointer;list-style:none;font-size:13.5px;color:var(--mut);font-weight:600;padding:4px 0}
+#mVMan>summary::-webkit-details-marker,#fMan>summary::-webkit-details-marker{display:none}
+#mVMan>summary:before,#fMan>summary:before{content:"▸ ";color:var(--crimson);font-weight:700}
+#mVMan[open]>summary:before,#fMan[open]>summary:before{content:"▾ "}
 .howto{border:1px solid var(--line);border-radius:var(--radius);padding:0;margin:18px 0 0;background:#fff;overflow:hidden}
 .howto summary{cursor:pointer;padding:14px 18px;font-family:var(--disp);font-weight:600;font-size:15px;list-style:none;background:var(--lgt)}
 .howto summary::-webkit-details-marker{display:none}
@@ -418,13 +418,17 @@ label.fld em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:
 <section id="vFac" class="hide">
   <p class="eyebrow">Consolidación · uso del equipo evaluador</p>
   <h1>Consolidado en vivo</h1>
-  <p class="lead">Pegue aquí los bloques que le manden las mesas. Cada bloque ya trae sus seis cartas y los tableros individuales de sus integrantes, así que con tres bloques queda todo. También acepta códigos sueltos, por si alguien no alcanzó a dárselo a su mesa.</p>
+  <p class="lead" id="fLead">Pegue aquí los bloques que le manden las mesas. Cada bloque ya trae sus seis cartas y los tableros individuales de sus integrantes, así que con tres bloques queda todo. También acepta códigos sueltos, por si alguien no alcanzó a dárselo a su mesa.</p>
 
-  <textarea id="fIn" rows="6" placeholder="Pegue aquí los códigos y los bloques de las mesas…"></textarea>
-  <p class="small" style="margin:6px 0 0" id="fNota">Puede pegar varias veces: lo repetido no se duplica. Si un código viene mal copiado se avisa, para pedir que lo reenvíen.</p>
+  <details id="fMan"><summary>Meter códigos a mano</summary>
+    <textarea id="fIn" rows="6" placeholder="Pegue aquí los códigos y los bloques de las mesas…"></textarea>
+    <p class="small" style="margin:6px 0 0" id="fNota">Puede pegar varias veces: lo repetido no se duplica. Si un código viene mal copiado se avisa, para pedir que lo reenvíen.</p>
+    <div class="nav">
+      <button class="btn" id="fRead">Leer lo pegado</button>
+      <button class="btn ghost" id="fReset">Empezar de cero</button>
+    </div>
+  </details>
   <div class="nav">
-    <button class="btn" id="fRead">Leer lo pegado</button>
-    <button class="btn ghost" id="fReset">Empezar de cero</button>
     <div class="spacer"></div>
     <button class="btn ghost" id="fCsv">Descargar CSV</button>
   </div>
@@ -1107,7 +1111,7 @@ function renderFac(){
   $("#fStat").innerHTML =
     '<div style="--sc:var(--steel)"><b>'+nv+'</b><span>Tableros</span></div>'+
     '<div style="--sc:var(--crimson)"><b>'+nc2+' <span style="font-size:14px;color:var(--mut)">/ 18</span></b><span>Cartas</span></div>'+
-    '<div style="--sc:var(--orange)"><b>'+nbr+'</b><span>Sectores separados</span></div>'+
+    '<div style="--sc:var(--orange)"><b>'+nbr+'</b><span>Brechas de dos peldaños</span></div>'+
     '<div style="--sc:#6E9E4A;min-width:230px"><b style="font-size:15px;line-height:2.1">'+
       TERR.map(t=>'<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:'+TCOLOR[t]+';margin-right:5px"></span>'+esc(t.split(" ")[0])+" "+F.votes.filter(v=>v.terr===t).length).join(" · ")+
     '</b><span>Votos por territorio</span></div>';
@@ -1256,12 +1260,12 @@ $$(".tab").forEach(t=>t.onclick=()=>{
 /* arranque */
 show("vHome");
 if(!haySync){ document.querySelectorAll(".neti").forEach(n=>n.classList.add("oculto"));
-  const mv=$("#mVMan"); if(mv){ mv.open=true; const sm=mv.querySelector("summary"); if(sm) sm.remove(); }
+  ["#mVMan","#fMan"].forEach(sel=>{ const mv=$(sel); if(mv){ mv.open=true; const sm=mv.querySelector("summary"); if(sm) sm.remove(); } });
 }
 else {
   marcarRed(false);
   const n=$("#fNota"); if(n) n.textContent = "Todo llega solo a esta pantalla. El recuadro de arriba queda por si alguien se queda sin conexión y hay que meter su código a mano.";
-  const mv=$("#mVMan"); if(mv) mv.open=false;
+  ["#mVMan","#fMan"].forEach(sel=>{ const mv=$(sel); if(mv) mv.open=false; });
   const txt = {
     hHero: "Antes de abrir nuestra lectura queremos la de ustedes. Primero cada quien valora su propio territorio separando dos bloques sectoriales; después las mesas escriben por qué. Todo viaja solo entre los tres pasos: nadie copia ni pega nada.",
     hRol1: "Mi territorio, doce casillas, siete minutos. Al terminar presiono Enviar y le llega a mi mesa.",
@@ -1271,7 +1275,8 @@ else {
     pE1s: "No lleva su nombre: solo el territorio y los doce colores. El código de abajo es el respaldo, por si la conexión falla.",
     pPie: "Puede corregir y volver a enviar: vale el último. No tiene que hacer nada más.",
     mVTit: "Los tableros de esta mesa",
-    mVLead: "Van apareciendo solos, apenas cada quien presiona Enviar. Cuando estén todos, empiecen las cartas: van a ver, casilla por casilla, qué puso cada quien antes de acordar el color."
+    mVLead: "Van apareciendo solos, apenas cada quien presiona Enviar. Cuando estén todos, empiecen las cartas: van a ver, casilla por casilla, qué puso cada quien antes de acordar el color.",
+    fLead: "El mapa se arma solo con lo que van enviando las personas y las mesas: no hay que pegar nada. Proyecte esta pantalla y déjela abierta."
   };
   for(const k in txt){ const e=$("#"+k); if(e) e.textContent = txt[k]; }
   bajar("/meta").then(()=>{});
