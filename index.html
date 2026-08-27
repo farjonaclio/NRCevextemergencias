@@ -155,8 +155,9 @@ label.fld em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:
   border-radius:0 8px 8px 0;padding:8px 11px;line-height:1.4}
 .sok{color:#2E7D32;font-weight:700}
 .smal{color:var(--crimson);font-weight:700}
+.crece{min-height:72px;overflow:hidden}
 .count{font-size:11.5px;color:var(--mut);text-align:right;margin-top:3px}
-.count.over{color:var(--r);font-weight:800}
+.count.over{color:var(--a);font-weight:800}
 
 .tabs{display:flex;gap:4px;flex-wrap:wrap;border-bottom:2px solid var(--line);margin:18px 0 4px}
 .tab{border:0;background:none;font-family:var(--disp);font-weight:600;font-size:14.5px;color:var(--mut);padding:9px 13px;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px}
@@ -456,7 +457,9 @@ label.fld em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:
 
   <div id="tabCalientes" class="hide">
     <p class="small" style="margin-top:12px">No son errores ni casillas mal puestas: son aquellas donde cinco minutos de conversación
-      cambian algo del informe. Están ordenadas por cuánto rinde discutirlas. Marque dos con «Llevar al plenario» y suben arriba.</p>
+      cambian lo que vamos a escribir. Las primeras salen de comparaciones internas del taller —la mesa contra el voto de su gente, un sector
+      contra el otro—: eso se puede afirmar hoy. Las siguientes contrastan con nuestra lectura provisional, que es una hipótesis y no un
+      resultado: eso se pregunta, no se concluye. Marque dos con «Llevar al plenario» y suben arriba.</p>
     <p class="small" id="fHotN" style="margin:6px 0 0;font-weight:700"></p>
     <div id="fHot"></div>
   </div>
@@ -471,18 +474,20 @@ label.fld em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:
       <div class="card tint" style="text-align:center;padding:34px 18px">
         <div style="font-size:46px;line-height:1">✉︎</div>
         <h2 style="margin:6px 0 4px">El sobre sigue cerrado</h2>
-        <p class="lead" style="margin:0 auto 16px;max-width:52ch">Nuestra lectura provisional de cada criterio en cada territorio. Se abre en el minuto cuarenta, no antes.</p>
+        <p class="lead" style="margin:0 auto 16px;max-width:52ch">Nuestra hipótesis de trabajo para cada criterio en cada territorio, escrita antes del taller. No es el resultado de la evaluación: es lo que hoy creemos, y este taller sirve justamente para ponerlo a prueba. Se abre en el minuto cuarenta, no antes.</p>
         <button class="btn mag" id="btnSobre">Abrir el sobre</button>
       </div>
     </div>
     <div id="sobreOpen" class="hide">
-      <div class="notice"><b>Lectura provisional.</b> Construida para efectos del ejercicio con la evidencia disponible al momento del taller. No constituye el veredicto del informe final, que se formula después de esta validación. <b>SD</b> = sin evidencia suficiente para un juicio territorial.</div>
+      <div class="notice"><b>Hipótesis de trabajo, no resultado.</b> Escrita con la evidencia disponible antes del taller. El informe todavía no está formulado y esta sesión es uno de sus insumos: donde la mesa y nosotros no coincidimos, la pregunta es qué falta por mirar, no quién se equivocó. <b>SD</b> = todavía no tenemos con qué sostener un juicio en ese territorio.</div>
       <div class="scroll"><table id="fSobre"></table></div>
     </div>
     <div id="sobrePaste" class="hide">
       <p class="lead">Este despliegue no trae la lectura del equipo evaluador. Péguela aquí para usarla en la sesión.</p>
       <textarea id="sobreIn" rows="5" class="mono" placeholder="#SOBRE …"></textarea>
-      <div class="nav"><button class="btn" id="sobreLoad">Cargar el sobre</button></div>
+      <div class="nav"><button class="btn" id="sobreLoad">Cargar el sobre</button>
+        <button class="btn ghost" id="sobreDemo">Usar un sobre de ensayo</button></div>
+      <p class="small" style="margin-top:8px">El de ensayo trae dieciocho casillas de mentira, marcadas <b>[DEMO]</b>, y sirve solo para practicar el minuto cuarenta. Reemplácelo por el verdadero antes de la sesión.</p>
     </div>
   </div>
 </section>
@@ -523,6 +528,9 @@ const COLORS_MESA = [["V","V"],["A","A"],["R","R"],["M","MIXTO"]];
    ── Si este repositorio es público y no quiere que se pueda leer antes del taller,
       borre la línea siguiente: la app pedirá pegar el sobre el día de la sesión. */
 const SOBRE_B64 = "";
+/* Sobre de ENSAYO. Sirve para practicar la mecánica antes de tener la lectura
+   definitiva: todas sus frases dicen [DEMO] y la app lo rotula en pantalla. */
+const SOBRE_DEMO = "eyJQZXJ0aW5lbmNpYXxQdXR1bWF5byI6IHsiYyI6ICJBIiwgInIiOiAiW0RFTU9dIFRleHRvIGRlIHBydWViYSwgbm8gZXMgdW5hIGxlY3R1cmEgcmVhbC4ifSwgIlBlcnRpbmVuY2lhfE5vcnRlIGRlIFNhbnRhbmRlciI6IHsiYyI6ICJWIiwgInIiOiAiW0RFTU9dIFRleHRvIGRlIHBydWViYSwgbm8gZXMgdW5hIGxlY3R1cmEgcmVhbC4ifSwgIlBlcnRpbmVuY2lhfENhdWNhIjogeyJjIjogIlYiLCAiciI6ICJbREVNT10gVGV4dG8gZGUgcHJ1ZWJhLCBubyBlcyB1bmEgbGVjdHVyYSByZWFsLiJ9LCAiQ29oZXJlbmNpYXxQdXR1bWF5byI6IHsiYyI6ICJSIiwgInIiOiAiW0RFTU9dIFRleHRvIGRlIHBydWViYSwgbm8gZXMgdW5hIGxlY3R1cmEgcmVhbC4ifSwgIkNvaGVyZW5jaWF8Tm9ydGUgZGUgU2FudGFuZGVyIjogeyJjIjogIkEiLCAiciI6ICJbREVNT10gVGV4dG8gZGUgcHJ1ZWJhLCBubyBlcyB1bmEgbGVjdHVyYSByZWFsLiJ9LCAiQ29oZXJlbmNpYXxDYXVjYSI6IHsiYyI6ICJWIiwgInIiOiAiW0RFTU9dIFRleHRvIGRlIHBydWViYSwgbm8gZXMgdW5hIGxlY3R1cmEgcmVhbC4ifSwgIkVmZWN0aXZpZGFkfFB1dHVtYXlvIjogeyJjIjogIkEiLCAiciI6ICJbREVNT10gVGV4dG8gZGUgcHJ1ZWJhLCBubyBlcyB1bmEgbGVjdHVyYSByZWFsLiJ9LCAiRWZlY3RpdmlkYWR8Tm9ydGUgZGUgU2FudGFuZGVyIjogeyJjIjogIkEiLCAiciI6ICJbREVNT10gVGV4dG8gZGUgcHJ1ZWJhLCBubyBlcyB1bmEgbGVjdHVyYSByZWFsLiJ9LCAiRWZlY3RpdmlkYWR8Q2F1Y2EiOiB7ImMiOiAiQSIsICJyIjogIltERU1PXSBUZXh0byBkZSBwcnVlYmEsIG5vIGVzIHVuYSBsZWN0dXJhIHJlYWwuIn0sICJFZmljaWVuY2lhfFB1dHVtYXlvIjogeyJjIjogIlNEIiwgInIiOiAiW0RFTU9dIFRleHRvIGRlIHBydWViYSwgbm8gZXMgdW5hIGxlY3R1cmEgcmVhbC4ifSwgIkVmaWNpZW5jaWF8Tm9ydGUgZGUgU2FudGFuZGVyIjogeyJjIjogIlNEIiwgInIiOiAiW0RFTU9dIFRleHRvIGRlIHBydWViYSwgbm8gZXMgdW5hIGxlY3R1cmEgcmVhbC4ifSwgIkVmaWNpZW5jaWF8Q2F1Y2EiOiB7ImMiOiAiU0QiLCAiciI6ICJbREVNT10gVGV4dG8gZGUgcHJ1ZWJhLCBubyBlcyB1bmEgbGVjdHVyYSByZWFsLiJ9LCAiTXVsdGlzZWN0b3JpYWxpZGFkfFB1dHVtYXlvIjogeyJjIjogIkEiLCAiciI6ICJbREVNT10gVGV4dG8gZGUgcHJ1ZWJhLCBubyBlcyB1bmEgbGVjdHVyYSByZWFsLiJ9LCAiTXVsdGlzZWN0b3JpYWxpZGFkfE5vcnRlIGRlIFNhbnRhbmRlciI6IHsiYyI6ICJBIiwgInIiOiAiW0RFTU9dIFRleHRvIGRlIHBydWViYSwgbm8gZXMgdW5hIGxlY3R1cmEgcmVhbC4ifSwgIk11bHRpc2VjdG9yaWFsaWRhZHxDYXVjYSI6IHsiYyI6ICJWIiwgInIiOiAiW0RFTU9dIFRleHRvIGRlIHBydWViYSwgbm8gZXMgdW5hIGxlY3R1cmEgcmVhbC4ifSwgIkNvb3JkaW5hY2nDs258UHV0dW1heW8iOiB7ImMiOiAiQSIsICJyIjogIltERU1PXSBUZXh0byBkZSBwcnVlYmEsIG5vIGVzIHVuYSBsZWN0dXJhIHJlYWwuIn0sICJDb29yZGluYWNpw7NufE5vcnRlIGRlIFNhbnRhbmRlciI6IHsiYyI6ICJWIiwgInIiOiAiW0RFTU9dIFRleHRvIGRlIHBydWViYSwgbm8gZXMgdW5hIGxlY3R1cmEgcmVhbC4ifSwgIkNvb3JkaW5hY2nDs258Q2F1Y2EiOiB7ImMiOiAiViIsICJyIjogIltERU1PXSBUZXh0byBkZSBwcnVlYmEsIG5vIGVzIHVuYSBsZWN0dXJhIHJlYWwuIn0sICJfX2RlbW8iOiB0cnVlfQ==";
 
 /* ═══════════════════════════ utilidades ═══════════════════════════ */
 const $ = s => document.querySelector(s);
@@ -991,10 +999,13 @@ function mCards(){
                                    (sub?'<em>'+esc(sub)+'</em>':''); }
         else lab.textContent = etiqueta;
         body.appendChild(lab);
-        const ta=el("textarea"); ta.rows=2; ta.value=c[destino]||""; ta.placeholder=ph;
+        const ta=el("textarea"); ta.rows=3; ta.value=c[destino]||""; ta.placeholder=ph;
+        ta.classList.add("crece");
         const cnt=el("div","count");
+        const crecer=()=>{ ta.style.height="auto"; ta.style.height=Math.max(ta.scrollHeight,72)+"px"; };
         const upd=()=>{ const w=ta.value.trim()?ta.value.trim().split(/\s+/).length:0;
-          cnt.textContent=w+" / 15 palabras"; cnt.classList.toggle("over", w>15); };
+          cnt.textContent = w===0 ? "escriban lo que haga falta" : w+(w===1?" palabra":" palabras");
+          cnt.classList.toggle("over", w>60); crecer(); };
         ta.oninput=()=>{ c[destino]=ta.value; upd(); save("mesa",M); agendarSubidaCartas(); mMeta(); };
         body.appendChild(ta); body.appendChild(cnt); upd();
       };
@@ -1010,7 +1021,7 @@ function mCards(){
           body.appendChild(un);
         }
       } else {
-        campo("razon", "Porque… (una frase, máximo 15 palabras)", "", null,
+        campo("razon", "Porque… (lo que haga falta; con dos frases claras basta)", "", null,
               "Los kits no variaron con el diagnóstico.");
         const sp = el("button","linkish","¿El porqué es distinto en cada sector? Sepárenlo →");
         sp.onclick=()=>{ c.sep=true; save("mesa",M); agendarSubidaCartas(); mCards(); };
@@ -1098,28 +1109,55 @@ function consolidate(){
   });
   return rows;
 }
+/* ── Qué merece plenario ──────────────────────────────────────────────────
+   El informe todavía no existe: este taller es uno de sus insumos. Así que
+   acá no se declara ninguna discrepancia con un veredicto. Lo que se ordena
+   son dos cosas distintas, y en ese orden:
+
+   · lo que se puede AFIRMAR hoy — comparaciones internas del propio taller:
+     la mesa contra el voto individual de su gente, y un sector contra el otro
+     dentro de la misma carta. Son hechos del ejercicio.
+   · lo que se puede PREGUNTAR — el contraste con la lectura provisional del
+     equipo evaluador, que es una hipótesis de trabajo y no un resultado.     */
 function hotOf(cell){
   const k = cell.carta;
   if(!k) return null;
   const sv = cell.sobre ? cell.sobre.c : null;
   const cols = [k.cW,k.cP].filter(Boolean);
-  if(sv==="SD" && cols.some(c=>c==="V"||c==="R"))
-    return [1,"La mesa afirma donde no tenemos dato","Pusieron color en un criterio que nosotros no podemos cerrar."];
-  if(sv && cols.some(c=>(c==="V"&&sv==="R")||(c==="R"&&sv==="V")))
-    return [1,"Dos peldaños con la evaluación","La mesa y nosotros leímos esta casilla al revés."];
+  const dW = cell.sect[0].dom, dP = cell.sect[1].dom;
+  const dist = (a,b)=> (PESO[a]&&PESO[b]) ? Math.abs(PESO[a]-PESO[b]) : 0;
+  const salto = Math.max(dist(dW,k.cW), dist(dP,k.cP));   // mesa vs. su propia gente
+
+  /* 1 · Lo que la sala puede resolver hoy, sin depender de nadie más. */
+  if(salto>=2)
+    return [1,"La mesa acordó algo muy distinto de lo que votó su gente",
+      "Solos pusieron un color y juntos acordaron otro, a dos peldaños. Puede ser una deliberación que corrigió la primera impresión, o una voz que se impuso. Solo ellos pueden decirlo."];
   if(cell.brecha==="NO")
-    return [1,"Un color solo no alcanza para este criterio","La mesa pintó los dos sectores a dos peldaños de distancia. No es una contradicción: es que el informe le está poniendo un veredicto único a dos realidades. "+(k.razon2?"Dicen: ":"")];
+    return [1,"Los dos sectores se comportaron muy distinto",
+      "La misma mesa pintó WASH y Alojamiento a dos peldaños de Protección, ICLA y Educación. No es una contradicción —los sectores pueden ir distinto— pero sí obliga a decidir si este criterio se escribe con un solo veredicto o con dos. "+(k.razon2?"Dicen: ":"")];
   if(k.nodeacuerdo)
-    return [2,"La mesa no se puso de acuerdo","El desacuerdo quedó declarado. Vale la pena oírlo entero."];
+    return [2,"La mesa no se puso de acuerdo",
+      "El desacuerdo quedó declarado. Vale la pena oírlo entero: dos lecturas conviviendo son un dato, no un empate."];
+  if(salto===1)
+    return [3,"La mesa se movió un peldaño respecto de su gente",
+      "Lo que pusieron solos y lo que acordaron juntos no coincide del todo. Se registra; se discute solo si sobra tiempo."];
+
+  /* 2 · Lo que hay que preguntarle a la sala antes de escribir. */
+  if(sv==="SD" && cols.some(c=>c==="V"||c==="R"))
+    return [2,"Aquí ellos tienen algo que nosotros no",
+      "Pusieron color en un criterio donde nuestra lectura provisional dice «sin dato». Puede haber evidencia que no alcanzamos a ver."];
+  if(sv && cols.some(c=>(c==="V"&&sv==="R")||(c==="R"&&sv==="V")))
+    return [2,"Nuestra lectura provisional y la de la mesa se cruzan",
+      "Leímos esta casilla al revés que ellos. No sabemos todavía quién tiene razón: por eso se pregunta antes de redactar."];
   if(k.fuente==="CZ"||k.fuente==="CO")
-    return [2,"Sustento débil para un hallazgo","La carta se sostiene en «"+(FLBL[k.fuente]||k.fuente).toLowerCase()+"»."];
-  const dW=cell.sect[0].dom, dP=cell.sect[1].dom;
-  if((dW&&dW!=="—"&&k.cW&&dW!==k.cW)||(dP&&dP!=="—"&&k.cP&&dP!==k.cP))
-    return [3,"La mesa se apartó del voto de su territorio","Lo que pusieron solos y lo que acordaron no coincide."];
+    return [3,"Sustento por confirmar",
+      "La carta se sostiene en «"+(FLBL[k.fuente]||k.fuente).toLowerCase()+"». Sirve igual, pero conviene saber si hay algo detrás antes de apoyarse en ella."];
   if(dW==="G"||dP==="G")
-    return [3,"Casi nadie sabía en un bloque","Ahí falta un dato y hay que declararlo en el informe."];
+    return [3,"Casi nadie sabía en un bloque",
+      "Ahí hay un vacío de información: el informe tendrá que declararlo en vez de rellenarlo."];
   if(sv && cols.some(c=>c!==sv))
-    return [4,"Divergencia de un peldaño","Se registra y no se debate."];
+    return [4,"Un peldaño de distancia con nuestra lectura",
+      "Se registra y no se debate."];
   return null;
 }
 let pararFac = ()=>{};
@@ -1161,7 +1199,7 @@ function renderFac(){
   let h="<tr><th rowspan='2'>Criterio</th><th rowspan='2'>Territorio</th>"+
     "<th colspan='2' style='background:var(--steel)'>WASH y Alojamiento</th>"+
     "<th colspan='2' style='background:#6E9E4A'>Protección, ICLA y Educación</th>"+
-    "<th rowspan='2' title='Distancia entre el color de WASH/Alojamiento y el de Protección/ICLA/Educación en la carta de la mesa'>Distancia<br>entre sectores</th><th rowspan='2'>Lo sé por</th><th rowspan='2'>Sobre</th></tr>"+
+    "<th rowspan='2' title='Distancia entre el color de WASH/Alojamiento y el de Protección/ICLA/Educación en la carta de la mesa'>Distancia<br>entre sectores</th><th rowspan='2'>Lo sé por</th><th rowspan='2' title='Lectura provisional del equipo evaluador. Es una hipótesis de trabajo, no el veredicto del informe.'>Nuestra<br>lectura</th></tr>"+
     "<tr><th class='sub' style='background:#5C7E92'>voto</th><th class='sub' style='background:#5C7E92'>mesa</th>"+
     "<th class='sub' style='background:#7DAB5C'>voto</th><th class='sub' style='background:#7DAB5C'>mesa</th></tr>";
   rows.forEach(r=>{
@@ -1246,6 +1284,17 @@ function renderFac(){
   $("#sobrePaste").classList.toggle("hide", !!sd);
   $("#sobreClosed").classList.toggle("hide", !sd || F.sobreOpen);
   $("#sobreOpen").classList.toggle("hide", !sd || !F.sobreOpen);
+  const esDemo = !!(sd && sd.__demo);
+  document.querySelectorAll(".demowarn").forEach(n=>n.remove());
+  if(esDemo){
+    ["#sobreClosed","#sobreOpen"].forEach(sel=>{
+      const box=$(sel); if(!box || box.classList.contains("hide")) return;
+      const w=el("div","notice demowarn");
+      w.innerHTML="<b>Sobre de ensayo.</b> Las dieciocho casillas son inventadas y dicen [DEMO]. Sirve para practicar; no se puede proyectar en la sesión.";
+      w.style.borderLeftColor="var(--orange)"; w.style.background="#FFF6F0";
+      box.insertBefore(w, box.firstChild);
+    });
+  }
   if(sd && F.sobreOpen){
     let s="<tr><th>Criterio</th>"+TERR.map(t=>"<th>"+esc(t)+"</th>").join("")+"</tr>";
     CRIT.forEach(c=>{
@@ -1276,6 +1325,10 @@ $("#fReset").onclick = ()=>{
   F={votes:[],cartas:[],sobreOpen:false,sobre:F.sobre,debate:[]}; save("fac",F); renderFac();
 };
 $("#btnSobre").onclick = ()=>{ F.sobreOpen=true; save("fac",F); renderFac(); };
+$("#sobreDemo").onclick = ()=>{
+  try{ F.sobre = JSON.parse(b64d(SOBRE_DEMO)); save("fac",F); renderFac();
+       toast("Sobre de ensayo cargado"); }catch(e){ toast("No se pudo cargar el ensayo"); }
+};
 $("#sobreLoad").onclick = ()=>{
   const raw=($("#sobreIn").value||"").replace(/^#SOBRE\s*/i,"").trim();
   try{
