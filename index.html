@@ -254,9 +254,21 @@ label.fld em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:
 .rsec{border-top:1px dashed var(--line);padding-top:7px;margin-top:7px}
 .rsec:first-of-type{border-top:0;margin-top:0;padding-top:0}
 .rsec .lbl{font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--sc)}
-.rres{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
-.rres .lbl{color:var(--mut)}
-.rres b{font-family:var(--disp);font-size:17px;font-variant-numeric:tabular-nums}
+.rsech{display:flex;align-items:baseline;gap:10px;justify-content:space-between}
+.rmesa{display:inline-flex;align-items:baseline;gap:5px;white-space:nowrap}
+.rmesa .lbl{color:var(--mut)}
+/* regla de 1 a 5 */
+.regla{position:relative;height:40px;margin:16px 10px 0 10px}
+.rlinea{position:absolute;left:0;right:0;top:26px;height:3px;border-radius:2px;
+  background:linear-gradient(90deg,var(--e1),var(--e2),var(--e3),var(--e4),var(--e5))}
+.rpto{position:absolute;top:27.5px;transform:translate(-50%,-50%);border-radius:50%;border:1.5px solid var(--navy);
+  display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:var(--navy);line-height:1}
+.rmarca{position:absolute;top:0;transform:translateX(-50%);text-align:center}
+.rmarca b{font-family:var(--disp);font-weight:800;font-size:16px;font-variant-numeric:tabular-nums;color:var(--navy);display:block;line-height:1}
+.rmarca:after{content:"";display:block;width:2px;height:10px;background:var(--navy);margin:2px auto 0}
+.rnum{position:absolute;top:32px;font-size:10px;font-weight:800;color:var(--mut)}
+.rnum.n1{left:-8px} .rnum.n5{right:-8px}
+.rpie{font-size:11px;color:var(--mut);margin-top:2px;text-align:right}
 .rraz{margin-top:9px;padding-top:8px;border-top:1px solid var(--line);font-size:12.5px;line-height:1.45;color:var(--ink)}
 .rnot{margin-top:6px;font-size:12px;line-height:1.4;color:var(--gray);font-style:italic}
 .pfoot{margin-top:36px;padding-top:14px;border-top:1px solid var(--line);font-size:11.5px;color:var(--mut)}
@@ -1617,6 +1629,30 @@ function barra(sc){
   h += '</div>';
   return h;
 }
+/* Regla de 1 a 5 con el promedio marcado y un punto por cada nota que alguien
+   puso. Dice lo mismo que el histograma en un tercio del alto. */
+function regla(sc){
+  const pos = v => ((Number(v)-1)/4)*100;
+  let h = '<div class="regla">';
+  if(sc.prom!=null){
+    const txt = (Math.round(sc.prom*10)/10).toString().replace(".",",");
+    h += '<span class="rmarca" style="left:'+pos(sc.prom)+'%"><b>'+txt+'</b></span>';
+  }
+  h += '<span class="rlinea"></span>';
+  ESC.forEach(([k])=>{
+    const v = sc.counts[k]||0; if(!v) return;
+    const d = Math.min(20, 9 + v*3);
+    h += '<span class="rpto p'+k+'" style="left:'+pos(k)+'%;width:'+d+'px;height:'+d+'px">'+
+         (v>1?v:"")+'</span>';
+  });
+  h += '<span class="rnum n1">1</span><span class="rnum n5">5</span></div>';
+  const fuera = [];
+  if(sc.counts.G) fuera.push(sc.counts.G+" no me consta");
+  if(sc.counts.X) fuera.push(sc.counts.X+" NA");
+  h += '<div class="rpie">'+(sc.nNum||0)+' persona'+(sc.nNum===1?"":"s")+
+       (fuera.length?' · '+fuera.join(" · "):'')+'</div>';
+  return h;
+}
 function contenidoPlenario(rows){
   const num = x => x==null ? "—" : (Math.round(x*10)/10).toString().replace(".",",");
   const hoy = new Date().toLocaleDateString("es-CO", {day:"numeric", month:"long", year:"numeric"});
@@ -1660,8 +1696,10 @@ function contenidoPlenario(rows){
   }
 
   h += '<h2>Cómo votó la gente, casilla por casilla</h2>'+
-       '<p class="sub">Las dieciocho casillas con el reparto completo de la Ronda 1. La barra alta es la nota que más se repitió; '+
-       'el número de abajo, cuántas personas la pusieron. G y NA quedan fuera del promedio.</p>';
+       '<p class="sub">Las dieciocho casillas de la Ronda 1. Cada regla va de 1 a 5: el número grande es el promedio, '+
+       'y cada círculo es una nota que alguien puso —con la cifra adentro cuando la pusieron varios—. '+
+       'Círculos juntos, acuerdo; círculos en los extremos, una conversación pendiente. '+
+       '«No me consta» y NA no entran en el promedio y se cuentan aparte, a la derecha.</p>';
   CRIT.forEach((c,ci)=>{
     h += '<h3>'+esc(c[0])+'</h3><div class="rejilla">';
     TERR.forEach(t=>{
@@ -1670,10 +1708,10 @@ function contenidoPlenario(rows){
       h += '<div class="rcel"><div class="rt" style="border-color:'+TCOLOR[t]+'">'+esc(t)+'</div>';
       SECT.forEach((sec,si)=>{
         const sc=r.sect[si], nota = si===0 ? (k&&k.cW) : (k&&k.cP);
-        h += '<div class="rsec" style="--sc:'+SCOL[si]+'"><span class="lbl">'+esc(si===0?"WASH y Alojamiento":"Prot., ICLA y Educación")+'</span>'+
-             barra(sc)+
-             '<div class="rres"><span class="lbl">promedio</span><b>'+num(sc.prom)+'</b>'+
-             '<span class="lbl">mesa</span>'+(nota?pill(nota):'<span class="pnone">—</span>')+'</div></div>';
+        h += '<div class="rsec" style="--sc:'+SCOL[si]+'">'+
+             '<div class="rsech"><span class="lbl">'+esc(si===0?"WASH y Alojamiento":"Prot., ICLA y Educación")+'</span>'+
+               '<span class="rmesa"><span class="lbl">mesa</span>'+(nota?pill(nota):'<span class="pnone">—</span>')+'</span></div>'+
+             regla(sc)+'</div>';
       });
       if(k && (k.razon||k.razon2))
         h += '<div class="rraz">'+(k.razon2
