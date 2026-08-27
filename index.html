@@ -1257,7 +1257,7 @@ $("#sobreLoad").onclick = ()=>{
 };
 $("#fCsv").onclick = ()=>{
   const rows=consolidate();
-  const head=["Criterio","Territorio","Voto_WASH_Aloj","n_WA","Mesa_WASH_Aloj","Voto_Prot_ICLA_Educ","n_PIE","Mesa_Prot_ICLA_Educ","Se_separan","Razon","Razon_de_la_separacion","Lo_se_por","Sin_acuerdo","Evaluacion","Casilla_caliente"];
+  const head=["Criterio","Territorio","Voto_WASH_Aloj","n_WA","Mesa_WASH_Aloj","Voto_Prot_ICLA_Educ","n_PIE","Mesa_Prot_ICLA_Educ","Distancia_entre_sectores","Porque_compartido_o_WASH_Aloj","Porque_Prot_ICLA_Educ","Lo_se_por","Sin_acuerdo","Evaluacion","Casilla_caliente"];
   const q = t => '"'+String(t||"").replace(/"/g,"'")+'"';
   const lines=[head.join(";")];
   rows.forEach(r=>{
@@ -1265,7 +1265,7 @@ $("#fCsv").onclick = ()=>{
     lines.push([r.crit,r.terr,
       r.sect[0].dom,r.sect[0].n,k?k.cW:"",
       r.sect[1].dom,r.sect[1].n,k?k.cP:"",
-      r.brecha==="NO"?"SI":(r.brecha==="CASI"?"un peldano":(r.brecha==="SI"?"no":"")),
+      r.brecha==="NO"?"dos peldanos":(r.brecha==="CASI"?"un peldano":(r.brecha==="SI"?"igual":"")),
       k?q(k.razon):"", k?q(k.razon2):"",
       k&&k.fuente?(FLBL[k.fuente]||k.fuente):"", k&&k.nodeacuerdo?"si":"",
       r.sobre?r.sobre.c:"", h?h[0]+" · "+h[1]:""].join(";"));
