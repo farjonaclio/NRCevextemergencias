@@ -4,9 +4,31 @@ Herramienta web de la actividad de análisis del **Taller de Resultados Prelimin
 Evaluación externa de la respuesta en emergencia · Proyecto COFM2308 (NRC Colombia).
 Diseño de la actividad: CliO Consulting.
 
-Una sola página, sin servidor y sin cuentas. Todo se procesa en el navegador de cada
-persona; nada viaja a ningún lado salvo lo que cada quien copia y pega en el chat de la
-reunión.
+Una sola página, sin instalación y sin cuentas. Cada dispositivo procesa lo suyo en el
+navegador y lo sincroniza con una sala compartida; si no hay conexión, la actividad sigue
+funcionando con códigos que se pegan en el chat de la reunión.
+
+## La sala compartida
+
+La constante `DB` en `index.html` apunta a una base Realtime Database de Firebase
+(`https://nrcevexem-default-rtdb.firebaseio.com`) y `SALA_POR_DEFECTO` fija la sala
+`cofm2308-k7rq`. Todo cuelga de `/salas/<sala>`:
+
+| Ruta | Qué guarda |
+|---|---|
+| `/salas/<sala>/votos/<código>` | `{t: territorio, v: doce letras}` — un voto individual, sin nombre |
+| `/salas/<sala>/cartas/<P·N·C>` | las seis cartas de la mesa de ese territorio |
+
+Se llega por REST puro (`fetch` para escribir, `EventSource` para escuchar en vivo): sin
+SDK, sin dependencias y sin build. Si la base no responde, la app marca «sin conexión» y
+las pestañas de códigos vuelven a aparecer.
+
+Para usar otra sala —una prueba, o un segundo taller— basta agregar el parámetro:
+`…/NRCevextemergencias/?sala=prueba-2026`. Las salas no se ven entre sí.
+
+> Los datos de la sala quedan en la base hasta que se borren a mano desde la consola de
+> Firebase. No hay nombres ni datos personales: los códigos llevan territorio y doce
+> letras. Conviene borrar el nodo `/salas/<sala>` cuando el informe esté cerrado.
 
 ---
 
@@ -61,20 +83,22 @@ Con `c` ∈ `V` · `A` · `R` · `SD`, y una entrada por cada criterio × territ
 | Momento | Quién | Qué hace |
 |---|---|---|
 | 0–5 | Todos | Abren el enlace. Quien facilita anuncia las mesas y sus territorios. |
-| 5–12 | Cada persona | **Voy a votar** → territorio → doce casillas → copia su código y lo pega en el chat. |
-| 12–28 | Un dispositivo por mesa | **Soy una mesa** → territorio → seis cartas → **Copiar las cartas** → pega en el chat. |
-| 28–40 | Quien facilita | **Consolidar** → pega todo el chat → **Leer lo pegado** → proyecta el mapa. |
+| 5–12 | Cada persona | **Voy a votar** → territorio → doce casillas → **Enviar**. Llega solo. |
+| 12–28 | Un dispositivo por mesa | **Soy una mesa** → territorio → los votos de su gente aparecen ya cargados → seis cartas. Se guardan solas. |
+| 28–40 | Quien facilita | **Consolidar**: el mapa se arma en vivo, sin pegar nada. |
 | 40–50 | Quien facilita | **Abrir el sobre** y pestaña **Casillas calientes**. |
 | 50–60 | Quien facilita | **Descargar CSV** para el informe. |
 
-Se puede pegar en el chat varias veces: lo repetido no se duplica y los códigos mal
-copiados se avisan.
+Si la conexión falla, reaparecen los códigos: cada persona copia el suyo al chat, la mesa
+copia su bloque y quien facilita lo pega todo en **Leer lo pegado**. Se puede pegar varias
+veces: lo repetido no se duplica y los códigos mal copiados se avisan.
 
 ## Estructura
 
-Un único archivo: `index.html`. Sin dependencias, sin build, sin paquetes. La única
-petición externa es la hoja de estilos de Google Fonts (Jost e IBM Plex Sans); si no
-carga, la página usa las tipografías del sistema y se ve igual de bien.
+Un único archivo: `index.html`. Sin dependencias, sin build, sin paquetes. Las únicas
+peticiones externas son la hoja de estilos de Google Fonts (Jost e IBM Plex Sans) —si no
+carga, la página usa las tipografías del sistema y se ve igual de bien— y la base de la
+sala.
 
 Los logotipos están incrustados como `data:` URI, así que la página funciona completa
 sin conexión una vez abierta.
@@ -83,5 +107,7 @@ sin conexión una vez abierta.
 
 No se recoge ningún dato personal. Los códigos de la Ronda 1 contienen únicamente el
 territorio y doce letras: no llevan nombre. Lo que cada persona escribe queda en el
-`localStorage` de su propio navegador y se puede borrar cerrando la sesión del sitio.
-En el informe las intervenciones se citan por rol y territorio, nunca por nombre.
+`localStorage` de su propio navegador y, si hay conexión, también en la sala compartida
+—siempre sin identificar a quien lo escribió—. En el informe las intervenciones se citan
+por rol y territorio, nunca por nombre. Cerrado el informe, conviene borrar el nodo
+`/salas/<sala>` desde la consola de Firebase.

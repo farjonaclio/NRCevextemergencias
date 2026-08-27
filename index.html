@@ -604,8 +604,8 @@ function parsePaste(txt){
 /* ═══════════════════════════ sincronización ═══════════════════════════
    Firebase Realtime Database por REST puro: sin SDK, sin dependencias.
    Si DB está vacío o la red falla, la app sigue funcionando con códigos. */
-const DB = "";                       // ← pegar aquí la URL de la base
-const SALA_POR_DEFECTO = "cofm2308";
+const DB = "https://nrcevexem-default-rtdb.firebaseio.com";
+const SALA_POR_DEFECTO = "cofm2308-k7rq";
 
 const sala = (new URLSearchParams(location.search).get("sala") || SALA_POR_DEFECTO)
                .toLowerCase().replace(/[^a-z0-9-]/g,"").slice(0,32);
