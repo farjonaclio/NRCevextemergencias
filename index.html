@@ -479,7 +479,7 @@ label.fld em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:
   </div>
 
   <div id="tabMapa">
-    <p class="small" style="margin-top:12px">La escala va de <b>1 · bajo</b> a <b>5 · alto</b> en grado de cumplimiento. <b>Lo más votado</b> es la nota que más se repitió entre todas las personas de ese territorio en la Ronda 1 —no es un promedio ni un voto individual—; pase el cursor por la celda para ver cuántas votaron y cómo se repartieron. <b>La mesa</b> es lo que acordaron juntas, con su razón escrita. <b>Nuestra lectura</b> aparece solo cuando usted abra el sobre.</p>
+    <p class="small" style="margin-top:12px">La escala va de <b>1 · bajo</b> a <b>5 · alto</b> en grado de cumplimiento. <b>Promedio</b> es el promedio de las notas que pusieron todas las personas de ese territorio en ese sector en la Ronda 1 —no es un voto individual—. «No me consta» y «NA» no entran en el cálculo. Pase el cursor por la celda para ver cuántas votaron y cómo se repartieron. <b>La mesa</b> es lo que acordaron juntas, con su razón escrita. <b>Nuestra lectura</b> aparece solo cuando usted abra el sobre.</p>
     <div class="scroll"><table id="fTable"></table></div>
   </div>
 
@@ -593,6 +593,16 @@ const CELLBG = {"1":"var(--e1)","2":"var(--e2)","3":"var(--e3)","4":"var(--e4)",
 function cellTd(v, extra){
   if(!v||v==="—") return '<td class="cnone">—</td>';
   return '<td class="cfill"'+(extra||"")+' style="background:'+(CELLBG[v]||"var(--gb)")+'">'+pill(v)+'</td>';
+}
+/* Celda de promedio: el número con un decimal, sobre el color del entero
+   más cercano. Si nadie puso nota, muestra G o NA. */
+function promTd(sc, extra){
+  if(!sc.n) return '<td class="cnone">—</td>';
+  if(sc.prom==null) return cellTd(sc.fuera, extra);
+  const ent = String(Math.round(sc.prom));
+  const txt = (Math.round(sc.prom*10)/10).toString().replace(".",",");
+  return '<td class="cfill"'+(extra||"")+' style="background:'+(CELLBG[ent]||"var(--gb)")+'">'+
+         '<span class="pill p'+ent+'">'+txt+'</span></td>';
 }
 function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 function b64d(s){ try{ return decodeURIComponent(escape(atob(s))); }catch(e){ return ""; } }
@@ -735,6 +745,12 @@ const NUEVA_CARTA = ()=>({cW:"",cP:"",razon:"",razon2:"",sep:false,fuente:"",fue
 let M = load("mesa", {terr:null, open:0, votos:[], cartas:Array(6).fill(null).map(NUEVA_CARTA)});
 if(!M.cartas || !M.cartas[0] || !("cW" in M.cartas[0])) M = {terr:M.terr||null, open:0, votos:[], cartas:Array(6).fill(null).map(NUEVA_CARTA)};
 if(!M.votos) M.votos = [];
+/* Si lo que quedó guardado pertenece a otro territorio, no se arrastra:
+   evita el «continuar donde iba» con cartas que ya no son de esta mesa. */
+if(M.terrCartas && M.terr && M.terrCartas!==M.terr){
+  M.cartas = Array(6).fill(null).map(NUEVA_CARTA); M.votos = []; M.open = 0;
+  M.terrCartas = M.terr;
+}
 let F = load("fac", {votes:[], cartas:[], sobreOpen:false, sobre:null, debate:[]});
 if(!Array.isArray(F.debate)) F.debate = [];
 
@@ -878,7 +894,7 @@ function renderMesa(){
              ".\n\nCambiar a "+t+" las borra y empieza de cero. ¿Seguir?")) return;
         limpiarMesa(M.terr);
       }
-      M.terr=t; save("mesa",M); renderMesa();
+      M.terr=t; M.terrCartas=t; save("mesa",M); renderMesa();
     };
     wrap.appendChild(b);
   });
@@ -886,12 +902,13 @@ function renderMesa(){
   $("#mTerr").classList.remove("hide"); $("#mForm").classList.add("hide"); $("#mVotos").classList.add("hide");
   $("#mTitle").textContent = "¿Qué territorio le tocó a esta mesa?";
   $("#mStart").textContent = (M.terr && M.cartas.some(c=>c.cW||c.cP))
-    ? "Continuar donde iba" : "Empezar";
+    ? "Continuar con "+M.terr : "Empezar";
 }
 let pararVotos = ()=>{}, subirCartaPend = null;
 /* Borra lo de esta mesa aquí y, si había subido cartas, también en la sala.
    Solo este dispositivo publica bajo su territorio, así que es seguro. */
 function limpiarMesa(terrAnterior){
+  M.terrCartas = null;
   clearTimeout(subirCartaPend);
   pararVotos(); pararVotos = ()=>{};
   const habiaCartas = M.cartas.some(c=>c.cW||c.cP);
@@ -1019,6 +1036,10 @@ function mCards(){
             rp.appendChild(el("span","rp "+cls, (k==="X"?"NA":k)+" × "+cuenta[k]));
           });
           if(!algo) rp.appendChild(el("span",null,"—"));
+          let sum=0, nn=0;
+          ESC.forEach(([k])=>{ sum += Number(k)*cuenta[k]; nn += cuenta[k]; });
+          if(nn) rp.appendChild(el("span",null,"· promedio "+
+            (Math.round(sum/nn*10)/10).toString().replace(".",",")));
           row.appendChild(rp);
         }
         const ponerFila = (lista, cls)=>{
@@ -1177,9 +1198,16 @@ function consolidate(){
         const counts={"1":0,"2":0,"3":0,"4":0,"5":0,G:0,X:0};
         F.votes.filter(v=>v.terr===t).forEach(v=>{ const x=v.vals[ci*2+s]; if(counts[x]!=null) counts[x]++; });
         const n=Object.values(counts).reduce((a,b)=>a+b,0);
-        let dom="—", best=-1;
-        if(n>0) Object.entries(counts).forEach(([k,val])=>{ if(val>best){best=val;dom=k;} });
-        cell.sect.push({counts, n, dom, peso: PESO[dom]||0});
+        /* Promedio de las notas de la escala. G y NA no son notas bajas:
+           quedan fuera del cálculo y se cuentan aparte. */
+        let suma=0, nNum=0;
+        ESC.forEach(([k])=>{ suma += Number(k)*counts[k]; nNum += counts[k]; });
+        const prom = nNum ? suma/nNum : null;
+        /* Etiqueta cuando nadie puso nota: manda lo que sí pusieron. */
+        const fuera = counts.G>=counts.X ? "G" : "X";
+        cell.sect.push({counts, n, nNum, prom, fuera,
+                        dom: prom!=null ? String(Math.round(prom)) : (n ? fuera : "—"),
+                        peso: prom!=null ? prom : 0});
       }
       const w=cell.sect[0], p=cell.sect[1];
       /* distancia entre sectores, en peldaños de la escala de cinco */
@@ -1222,14 +1250,17 @@ function hotOf(cell){
   const cols = [k.cW,k.cP].filter(Boolean);
   const dW = cell.sect[0].dom, dP = cell.sect[1].dom;
   const dist = (a,b)=> (PESO[a]&&PESO[b]) ? Math.abs(PESO[a]-PESO[b]) : 0;
-  const salto = Math.max(dist(dW,k.cW), dist(dP,k.cP));   // mesa vs. su propia gente
+  /* mesa contra el promedio de su propia gente; el promedio lleva decimales */
+  const dPro = (prom,nota)=> (prom!=null && PESO[nota]) ? Math.abs(prom-PESO[nota]) : 0;
+  const salto = Math.max(dPro(cell.sect[0].prom, k.cW), dPro(cell.sect[1].prom, k.cP));
+  const num = x => (Math.round(x*10)/10).toString().replace(".",",");
 
   /* 1 · Lo que la sala puede resolver hoy, sin depender de nadie más.
      En una escala de cinco, tres peldaños es un desacuerdo real; uno o dos
      son matiz y se registran sin ocupar el plenario. */
-  if(salto>=3)
+  if(salto>=2.5)
     return [1,"La mesa acordó algo muy distinto de lo que votó su gente",
-      "Solos pusieron una nota y juntos acordaron otra, a "+salto+" peldaños de distancia. Puede ser una deliberación que corrigió la primera impresión, o una voz que se impuso. Solo ellos pueden decirlo."];
+      "El promedio de lo que pusieron solos y lo que acordaron juntos están a "+num(salto)+" peldaños de distancia. Puede ser una deliberación que corrigió la primera impresión, o una voz que se impuso. Solo ellos pueden decirlo."];
   if(cell.dist>=3)
     return [1,"Los dos sectores se comportaron muy distinto",
       "La misma mesa puso WASH y Alojamiento a "+cell.dist+" peldaños de Protección, ICLA y Educación. No es una contradicción —los sectores pueden ir distinto— pero sí obliga a decidir si este criterio se escribe con una nota o con dos. "+(k.razon2?"Dicen: ":"")];
@@ -1241,7 +1272,7 @@ function hotOf(cell){
     return [2,"La mesa no se puso de acuerdo",
       "El desacuerdo quedó declarado. Vale la pena oírlo entero: dos lecturas conviviendo son un dato, no un empate."];
   if(salto>=1)
-    return [3,"La mesa se movió "+salto+(salto===1?" peldaño":" peldaños")+" respecto de su gente",
+    return [3,"La mesa se movió "+num(salto)+" peldaños respecto del promedio de su gente",
       "Lo que pusieron solos y lo que acordaron juntos no coincide del todo. Se registra; se discute solo si sobra tiempo."];
 
   /* 2 · Lo que hay que preguntarle a la sala antes de escribir. */
@@ -1260,7 +1291,7 @@ function hotOf(cell){
       return [3,"Sustento por confirmar",
         "La carta se sostiene "+fs.join(" y ")+". Sirve igual, pero conviene saber si hay algo detrás antes de apoyarse en ella."];
   }
-  if(dW==="G"||dP==="G")
+  if(cell.sect.some(x=>x.n && x.counts.G > x.nNum))
     return [3,"Casi nadie sabía en un bloque",
       "Ahí hay un vacío de información: el informe tendrá que declararlo en vez de rellenarlo."];
   if(sv && PESO[sv] && cols.some(c=>c!==sv))
@@ -1308,9 +1339,9 @@ function renderFac(){
     "<th colspan='2' style='background:var(--steel)'>WASH y Alojamiento</th>"+
     "<th colspan='2' style='background:#6E9E4A'>Protección, ICLA y Educación</th>"+
     "<th rowspan='2' title='Peldaños de diferencia entre la nota de WASH/Alojamiento y la de Protección/ICLA/Educación en la carta de la mesa'>Distancia<br>entre sectores</th><th rowspan='2'>Lo sé por</th><th rowspan='2' title='Lectura provisional del equipo evaluador. Es una hipótesis de trabajo, no el veredicto del informe.'>Nuestra<br>lectura</th></tr>"+
-    "<tr><th class='sub' style='background:#5C7E92' title='La nota que más se repitió entre todas las personas que votaron ese territorio. Pase el cursor por la celda para ver cuántas votaron.'>lo más votado</th>"+
+    "<tr><th class='sub' style='background:#5C7E92' title='Promedio de las notas que pusieron todas las personas de ese territorio en ese sector. G y NA no entran en el promedio. Pase el cursor por la celda para ver el reparto.'>promedio</th>"+
     "<th class='sub' style='background:#5C7E92'>la mesa</th>"+
-    "<th class='sub' style='background:#7DAB5C' title='La nota que más se repitió entre todas las personas que votaron ese territorio.'>lo más votado</th>"+
+    "<th class='sub' style='background:#7DAB5C' title='Promedio de las notas que pusieron todas las personas de ese territorio en ese sector. G y NA no entran en el promedio.'>promedio</th>"+
     "<th class='sub' style='background:#7DAB5C'>la mesa</th></tr>";
   rows.forEach(r=>{
     const k=r.carta;
@@ -1319,12 +1350,13 @@ function renderFac(){
              : (r.dist===0 ? '<span class="small">igual</span>'
              : '<span class="small">'+r.dist+(r.dist===1?" peldaño":" peldaños")+'</span>'));
     const cuentas = sc => Object.entries(sc.counts).filter(([,v])=>v).map(([k,v])=>(k==="X"?"NA":k)+"×"+v).join("  ");
-    const nW=r.sect[0].n?(" title='"+r.sect[0].n+" personas votaron este sector: "+cuentas(r.sect[0])+"'"):"",
-          nP=r.sect[1].n?(" title='"+r.sect[1].n+" personas votaron este sector: "+cuentas(r.sect[1])+"'"):"";
+    const tit = sc => sc.n ? (" title='"+sc.n+" persona"+(sc.n===1?"":"s")+" votó este sector: "+cuentas(sc)+
+                              (sc.prom!=null ? " · promedio de las notas: "+(Math.round(sc.prom*100)/100).toString().replace(".",",") : "")+"'") : "";
+    const nW=tit(r.sect[0]), nP=tit(r.sect[1]);
     h+="<tr><td class='k'>"+esc(r.crit)+"</td>"+
        "<td class='tcell' style='--tc:"+TCOLOR[r.terr]+"'>"+esc(r.terr)+"</td>"+
-       cellTd(r.sect[0].dom,nW)+(k&&k.cW?cellTd(k.cW):"<td class='cnone'>—</td>")+
-       cellTd(r.sect[1].dom,nP)+(k&&k.cP?cellTd(k.cP):"<td class='cnone'>—</td>")+
+       promTd(r.sect[0],nW)+(k&&k.cW?cellTd(k.cW):"<td class='cnone'>—</td>")+
+       promTd(r.sect[1],nP)+(k&&k.cP?cellTd(k.cP):"<td class='cnone'>—</td>")+
        "<td style='text-align:center'>"+br+"</td>"+
        "<td class='small'>"+(k?fuenteTxt(k):"")+(k&&k.nodeacuerdo?" <b style='color:var(--crimson)'>· sin acuerdo</b>":"")+"</td>"+
        (F.sobreOpen&&r.sobre?cellTd(r.sobre.c):"<td class='cnone'>✉︎</td>")+"</tr>";
@@ -1490,14 +1522,14 @@ $("#sobreLoad").onclick = ()=>{
 };
 $("#fCsv").onclick = ()=>{
   const rows=consolidate();
-  const head=["Criterio","Territorio","Voto_WASH_Aloj","n_WA","Mesa_WASH_Aloj","Voto_Prot_ICLA_Educ","n_PIE","Mesa_Prot_ICLA_Educ","Distancia_entre_sectores_en_peldanos","Porque_compartido_o_WASH_Aloj","Porque_Prot_ICLA_Educ","Lo_se_por","Lo_se_por_Prot_ICLA_Educ","Sin_acuerdo","Nuestra_lectura","Por_que_conversarla","Al_plenario"];
+  const head=["Criterio","Territorio","Promedio_WASH_Aloj","n_WA","Mesa_WASH_Aloj","Promedio_Prot_ICLA_Educ","n_PIE","Mesa_Prot_ICLA_Educ","Distancia_entre_sectores_en_peldanos","Porque_compartido_o_WASH_Aloj","Porque_Prot_ICLA_Educ","Lo_se_por","Lo_se_por_Prot_ICLA_Educ","Sin_acuerdo","Nuestra_lectura","Por_que_conversarla","Al_plenario"];
   const q = t => '"'+String(t||"").replace(/"/g,"'")+'"';
   const lines=[head.join(";")];
   rows.forEach(r=>{
     const h=hotOf(r), k=r.carta;
     lines.push([r.crit,r.terr,
-      r.sect[0].dom,r.sect[0].n,k?k.cW:"",
-      r.sect[1].dom,r.sect[1].n,k?k.cP:"",
+      r.sect[0].prom==null?"":(Math.round(r.sect[0].prom*100)/100), r.sect[0].n, k?k.cW:"",
+      r.sect[1].prom==null?"":(Math.round(r.sect[1].prom*100)/100), r.sect[1].n, k?k.cP:"",
       r.dist==null?"":String(r.dist),
       k?q(k.razon):"", k?q(k.razon2):"",
       k&&k.fuente?(FLBL[k.fuente]||k.fuente):"", k&&k.fuente2?(FLBL[k.fuente2]||k.fuente2):"",
