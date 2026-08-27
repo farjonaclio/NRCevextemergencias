@@ -168,6 +168,11 @@ label.fld em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:
 .hot.p3{border-left-color:var(--a)}
 .hot .h{font-family:var(--disp);font-weight:700;font-size:15.5px;margin-bottom:3px}
 .hot .why{font-size:13px;color:var(--gray)}
+.hot.elegida{box-shadow:0 0 0 2px var(--navy) inset;background:#fff}
+.hotpick{margin-top:9px;border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:5px 13px;
+  cursor:pointer;font:inherit;font-size:12.5px;font-weight:700;color:var(--mut)}
+.hotpick:hover{border-color:var(--navy);color:var(--navy)}
+.hotpick.on{background:var(--navy);border-color:var(--navy);color:#fff}
 .hot .tag{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#fff;background:var(--mut);border-radius:5px;padding:2px 7px;margin-right:7px;vertical-align:1px}
 .hot.p1 .tag{background:var(--orange)} .hot.p2 .tag{background:var(--teal)} .hot.p3 .tag{background:var(--a)}
 
@@ -450,7 +455,9 @@ label.fld em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:
   </div>
 
   <div id="tabCalientes" class="hide">
-    <p class="small" style="margin-top:12px">Ordenadas por prioridad. Escoja dos.</p>
+    <p class="small" style="margin-top:12px">No son errores ni casillas mal puestas: son aquellas donde cinco minutos de conversación
+      cambian algo del informe. Están ordenadas por cuánto rinde discutirlas. Marque dos con «Llevar al plenario» y suben arriba.</p>
+    <p class="small" id="fHotN" style="margin:6px 0 0;font-weight:700"></p>
     <div id="fHot"></div>
   </div>
 
@@ -684,7 +691,8 @@ const NUEVA_CARTA = ()=>({cW:"",cP:"",razon:"",razon2:"",sep:false,fuente:"",nod
 let M = load("mesa", {terr:null, open:0, votos:[], cartas:Array(6).fill(null).map(NUEVA_CARTA)});
 if(!M.cartas || !M.cartas[0] || !("cW" in M.cartas[0])) M = {terr:M.terr||null, open:0, votos:[], cartas:Array(6).fill(null).map(NUEVA_CARTA)};
 if(!M.votos) M.votos = [];
-let F = load("fac", {votes:[], cartas:[], sobreOpen:false, sobre:null});
+let F = load("fac", {votes:[], cartas:[], sobreOpen:false, sobre:null, debate:[]});
+if(!Array.isArray(F.debate)) F.debate = [];
 
 /* ═══════════════════════════ navegación ═══════════════════════════ */
 function alTope(){
@@ -1100,7 +1108,7 @@ function hotOf(cell){
   if(sv && cols.some(c=>(c==="V"&&sv==="R")||(c==="R"&&sv==="V")))
     return [1,"Dos peldaños con la evaluación","La mesa y nosotros leímos esta casilla al revés."];
   if(cell.brecha==="NO")
-    return [1,"Los dos sectores se separan","La propia mesa los pintó distinto. "+(k.razon2?"Dicen: ":"")];
+    return [1,"Un color solo no alcanza para este criterio","La mesa pintó los dos sectores a dos peldaños de distancia. No es una contradicción: es que el informe le está poniendo un veredicto único a dos realidades. "+(k.razon2?"Dicen: ":"")];
   if(k.nodeacuerdo)
     return [2,"La mesa no se puso de acuerdo","El desacuerdo quedó declarado. Vale la pena oírlo entero."];
   if(k.fuente==="CZ"||k.fuente==="CO")
@@ -1173,13 +1181,33 @@ function renderFac(){
   $("#fTable").innerHTML=h;
 
   // calientes
-  const hot = rows.map(r=>({r, h:hotOf(r)})).filter(x=>x.h).sort((a,b)=>a.h[0]-b.h[0]);
+  const clave = r => r.crit+"|"+r.terr;
+  const elegida = r => F.debate.indexOf(clave(r))>=0;
+  const hot = rows.map(r=>({r, h:hotOf(r)})).filter(x=>x.h)
+                  .sort((a,b)=>(elegida(b.r)-elegida(a.r)) || (a.h[0]-b.h[0]));
   const hv=$("#fHot"); hv.innerHTML="";
-  if(!hot.length) hv.appendChild(el("p","lead","Todavía no hay cartas suficientes. Aparecerán en cuanto las mesas envíen sus bloques."));
+  const nota=$("#fHotN");
+  if(nota) nota.textContent = F.debate.length
+    ? "Al plenario: " + F.debate.map(k=>k.replace("|"," × ")).join("  ·  ")
+    : "Todavía no ha elegido ninguna.";
+  if(!hot.length) hv.appendChild(el("p","lead","Todavía no hay cartas suficientes. Aparecerán en cuanto las mesas envíen sus cartas."));
   hot.forEach(({r,h})=>{
-    const d=el("div","hot p"+Math.min(h[0],3));
+    const sel = elegida(r);
+    const d=el("div","hot p"+Math.min(h[0],3)+(sel?" elegida":""));
     d.innerHTML='<div class="h"><span class="tag">'+h[0]+'</span>'+esc(r.crit)+' × '+esc(r.terr)+' — '+esc(h[1])+'</div>'+
       '<div class="why">'+esc(h[2])+(r.carta&&r.carta.razon?' <b>«'+esc(r.carta.razon)+'»</b>':'')+'</div>';
+    const b=el("button","hotpick"+(sel?" on":""), sel?"✓ En el plenario":"Llevar al plenario");
+    b.setAttribute("aria-pressed", sel);
+    b.onclick=()=>{
+      const k=clave(r), i=F.debate.indexOf(k);
+      if(i>=0) F.debate.splice(i,1);
+      else {
+        if(F.debate.length>=2 && !confirm("Ya hay dos casillas elegidas y el bloque dura diez minutos.\n\n¿Agregar una tercera igual?")) return;
+        F.debate.push(k);
+      }
+      save("fac",F); renderFac();
+    };
+    d.appendChild(b);
     hv.appendChild(d);
   });
 
@@ -1245,7 +1273,7 @@ $("#fRead").onclick = ()=>{
 };
 $("#fReset").onclick = ()=>{
   if(!confirm("¿Borrar todo lo consolidado?")) return;
-  F={votes:[],cartas:[],sobreOpen:false,sobre:F.sobre}; save("fac",F); renderFac();
+  F={votes:[],cartas:[],sobreOpen:false,sobre:F.sobre,debate:[]}; save("fac",F); renderFac();
 };
 $("#btnSobre").onclick = ()=>{ F.sobreOpen=true; save("fac",F); renderFac(); };
 $("#sobreLoad").onclick = ()=>{
@@ -1257,7 +1285,7 @@ $("#sobreLoad").onclick = ()=>{
 };
 $("#fCsv").onclick = ()=>{
   const rows=consolidate();
-  const head=["Criterio","Territorio","Voto_WASH_Aloj","n_WA","Mesa_WASH_Aloj","Voto_Prot_ICLA_Educ","n_PIE","Mesa_Prot_ICLA_Educ","Distancia_entre_sectores","Porque_compartido_o_WASH_Aloj","Porque_Prot_ICLA_Educ","Lo_se_por","Sin_acuerdo","Evaluacion","Casilla_caliente"];
+  const head=["Criterio","Territorio","Voto_WASH_Aloj","n_WA","Mesa_WASH_Aloj","Voto_Prot_ICLA_Educ","n_PIE","Mesa_Prot_ICLA_Educ","Distancia_entre_sectores","Porque_compartido_o_WASH_Aloj","Porque_Prot_ICLA_Educ","Lo_se_por","Sin_acuerdo","Evaluacion","Casilla_caliente","Al_plenario"];
   const q = t => '"'+String(t||"").replace(/"/g,"'")+'"';
   const lines=[head.join(";")];
   rows.forEach(r=>{
@@ -1268,7 +1296,8 @@ $("#fCsv").onclick = ()=>{
       r.brecha==="NO"?"dos peldanos":(r.brecha==="CASI"?"un peldano":(r.brecha==="SI"?"igual":"")),
       k?q(k.razon):"", k?q(k.razon2):"",
       k&&k.fuente?(FLBL[k.fuente]||k.fuente):"", k&&k.nodeacuerdo?"si":"",
-      r.sobre?r.sobre.c:"", h?h[0]+" · "+h[1]:""].join(";"));
+      r.sobre?r.sobre.c:"", h?h[0]+" · "+h[1]:"",
+      F.debate.indexOf(r.crit+"|"+r.terr)>=0?"si":""].join(";"));
   });
   saveFile("tablero_COFM2308.csv", "﻿"+lines.join("\n"));
 };
