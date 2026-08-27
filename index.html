@@ -162,6 +162,7 @@ td{font-variant-numeric:tabular-nums}
 .pSD{background:var(--gb);color:var(--g);border-color:var(--g)}
 .pnone{color:var(--mut)}
 td.cfill{text-align:center;padding:5px 6px}
+.nsm{display:block;font-size:9.5px;color:var(--mut);font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums}
 td.cnone{text-align:center;color:var(--mut)}
 td.tcell{border-left:5px solid var(--tc,var(--line));font-weight:600}
 
@@ -207,7 +208,13 @@ label.fld em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:
 .stat b{display:block;font-family:var(--disp);font-weight:700;font-size:26px;line-height:1.1;font-variant-numeric:tabular-nums}
 .stat span{font-size:11.5px;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
 
-#mVMan,#fMan{margin-top:18px;border-top:1px solid var(--line);padding-top:10px}
+#mVMan,#fMan,#pNotaBox{margin-top:18px;border-top:1px solid var(--line);padding-top:10px}
+#pNotaBox>summary{cursor:pointer;list-style:none;font-size:13.5px;color:var(--teal);font-weight:700;padding:4px 0}
+#pNotaBox>summary::-webkit-details-marker{display:none}
+#pNotaBox>summary:before{content:"✎ ";font-weight:700}
+#pNotaBox[open]>summary{color:var(--mut)}
+.notacard{border-left:3px solid var(--steel);background:#F4F8FA;border-radius:0 8px 8px 0;padding:8px 11px;margin:8px 0;font-size:13px;line-height:1.45}
+.notacard b{display:block;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--mut);margin-bottom:2px}
 #mVMan>summary,#fMan>summary{cursor:pointer;list-style:none;font-size:13.5px;color:var(--mut);font-weight:600;padding:4px 0}
 #mVMan>summary::-webkit-details-marker,#fMan>summary::-webkit-details-marker{display:none}
 #mVMan>summary:before,#fMan>summary:before{content:"▸ ";color:var(--crimson);font-weight:700}
@@ -365,8 +372,9 @@ label.fld em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:
   <div id="pTerr">
     <p class="lead">Valore únicamente el territorio en el que trabaja. Si trabaja en más de uno, escoja aquel del que más le consta.</p>
     <div class="chips" id="pTerrChips"></div>
-    <div class="notice"><b>Ojo:</b> en Putumayo no hubo alojamiento y en Cauca el proyecto no incluye WASH. Esas casillas se marcan <b>NA</b>, no 1: es un hecho del diseño, no una nota baja.</div>
-    <div class="nav"><button class="btn" id="pStart" disabled>Empezar</button></div>
+    <div class="notice"><b>Ojo con NA.</b> Si un sector no operó en su territorio, esa casilla va <b>NA</b> y no 1: es un hecho del diseño del proyecto, no una nota baja. Quien facilita les dirá al empezar qué operó en cada territorio.</div>
+    <div class="nav"><button class="btn" id="pStart" disabled>Empezar</button>
+      <button class="btn ghost hide" id="pRehacer">Empezar de nuevo</button></div>
   </div>
 
   <div id="pStep" class="hide">
@@ -375,6 +383,10 @@ label.fld em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:
     <h2 id="pCrit" style="margin-top:4px"></h2>
     <p class="lead" id="pCritQ" style="font-size:14px"></p>
     <div id="pSectors"></div>
+    <details id="pNotaBox"><summary>Dejar una nota sobre este criterio (opcional)</summary>
+      <textarea id="pNota" rows="3" class="crece" placeholder="Lo que no cabe en un número: un ejemplo, un matiz, una pregunta para la mesa."></textarea>
+      <p class="small" id="pNotaAviso" style="margin:4px 0 0">Su mesa la va a ver junto a esta casilla. No lleva su nombre.</p>
+    </details>
     <div class="nav">
       <button class="btn ghost" id="pPrev">Atrás</button>
       <button class="btn" id="pNext">Siguiente</button>
@@ -404,6 +416,7 @@ label.fld em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:
     <div class="nav">
       <button class="btn teal" id="pCopy">Copiar el código</button>
       <button class="btn ghost" id="pEdit">Corregir mi tablero</button>
+      <button class="btn ghost" id="pOtra">Otra persona vota aquí</button>
     </div>
     <p class="small" style="margin-top:12px" id="pPie">Puede corregir y generar otro: vale el último. La mesa los junta todos y los manda en un solo bloque, así que usted no tiene que hacer nada más.</p>
   </div>
@@ -417,7 +430,8 @@ label.fld em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:
   <div id="mTerr">
     <p class="lead">Seis cartas, una por criterio. En cada una se pinta por separado lo que pasó en WASH y Alojamiento y lo que pasó en Protección, ICLA y Educación.</p>
     <div class="chips" id="mTerrChips"></div>
-    <div class="nav"><button class="btn" id="mStart" disabled>Empezar</button></div>
+    <div class="nav"><button class="btn" id="mStart" disabled>Empezar</button>
+      <button class="btn ghost hide" id="mRehacer">Empezar de nuevo</button></div>
   </div>
 
   <div id="mVotos" class="hide">
@@ -601,8 +615,10 @@ function promTd(sc, extra){
   if(sc.prom==null) return cellTd(sc.fuera, extra);
   const ent = String(Math.round(sc.prom));
   const txt = (Math.round(sc.prom*10)/10).toString().replace(".",",");
+  const fuera = sc.counts.G + sc.counts.X;
   return '<td class="cfill"'+(extra||"")+' style="background:'+(CELLBG[ent]||"var(--gb)")+'">'+
-         '<span class="pill p'+ent+'">'+txt+'</span></td>';
+         '<span class="pill p'+ent+'">'+txt+'</span>'+
+         '<span class="nsm">'+sc.nNum+(fuera?"+"+fuera:"")+'</span></td>';
 }
 function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 function b64d(s){ try{ return decodeURIComponent(escape(atob(s))); }catch(e){ return ""; } }
@@ -740,7 +756,16 @@ function escuchar(p, alCambiar){
 }
 
 /* ═══════════════════════════ estado ═══════════════════════════ */
-let P = load("part", {terr:null, vals:Array(12).fill(""), step:0});
+/* Cada papeleta tiene un identificador propio, distinto del código.
+   Así dos personas que votan igual desde el mismo equipo cuentan dos veces,
+   y quien corrige su tablero sobrescribe el suyo en vez de agregar otro. */
+let P = load("part", {id:null, terr:null, vals:Array(12).fill(""), notas:{}, step:0});
+if(!P.notas) P.notas = {};
+const nuevaPapeleta = ()=>{
+  let x=""; const A="abcdefghijkmnpqrstuvwxyz23456789";
+  for(let i=0;i<12;i++) x += A[Math.floor(Math.random()*A.length)];
+  return x;
+};
 const NUEVA_CARTA = ()=>({cW:"",cP:"",razon:"",razon2:"",sep:false,fuente:"",fuente2:"",nodeacuerdo:false});
 let M = load("mesa", {terr:null, open:0, votos:[], cartas:Array(6).fill(null).map(NUEVA_CARTA)});
 if(!M.cartas || !M.cartas[0] || !("cW" in M.cartas[0])) M = {terr:M.terr||null, open:0, votos:[], cartas:Array(6).fill(null).map(NUEVA_CARTA)};
@@ -782,7 +807,14 @@ function renderPart(){
     const b=el("button","chip",'<span class="cdot"></span>'+esc(t));
     b.style.setProperty("--tc", TCOLOR[t]);
     b.setAttribute("aria-pressed", P.terr===t);
-    b.onclick=()=>{ P.terr=t; save("part",P); renderPart(); };
+    b.onclick=()=>{
+      if(P.terr && P.terr!==t && P.vals.some(v=>v!=="")){
+        if(!confirm("Ya tiene casillas puestas para "+P.terr+
+                    ".\n\nCambiar a "+t+" las borra y empieza de cero. ¿Seguir?")) return;
+        P.vals=Array(12).fill(""); P.notas={}; P.step=0; P.id=null;
+      }
+      P.terr=t; save("part",P); renderPart();
+    };
     wrap.appendChild(b);
   });
   $("#pStart").disabled = !P.terr;
@@ -790,9 +822,23 @@ function renderPart(){
   $("#pTerr").classList.toggle("hide", false);
   $("#pStep").classList.add("hide"); $("#pReview").classList.add("hide"); $("#pDone").classList.add("hide");
   $("#pTitle").textContent = "¿En qué territorio trabaja usted?";
-  if(started){ $("#pStart").textContent = "Continuar donde iba"; }
+  $("#pStart").textContent = started ? "Continuar con "+P.terr : "Empezar";
+  const rehacer = $("#pRehacer");
+  if(rehacer) rehacer.classList.toggle("hide", !started);
 }
 $("#pStart").onclick = ()=>{ P.step = P.vals.findIndex(v=>v===""); if(P.step<0) P.step=0; P.step=Math.floor(P.step/2); goStep(); };
+$("#pRehacer").onclick = ()=>{
+  if(!confirm("Se borra lo que lleva puesto en "+P.terr+" y se empieza de cero. ¿Seguir?")) return;
+  P.vals=Array(12).fill(""); P.notas={}; P.step=0; P.id=null; save("part",P); renderPart();
+};
+/* Un mismo equipo puede recibir varias papeletas: se limpia todo, incluido el
+   identificador, para que el envío anterior siga contando por separado. */
+$("#pOtra").onclick = ()=>{
+  if(!confirm("El tablero anterior ya quedó enviado y sigue contando.\n\n"+
+              "Esta pantalla queda en blanco para que vote otra persona, o para votar otro territorio. ¿Seguir?")) return;
+  P = {id:null, terr:null, vals:Array(12).fill(""), notas:{}, step:0};
+  save("part",P); show("vPart"); renderPart(); alTope();
+};
 function goStep(){
   $("#pTerr").classList.add("hide"); $("#pReview").classList.add("hide"); $("#pDone").classList.add("hide");
   $("#pStep").classList.remove("hide");
@@ -813,9 +859,14 @@ function goStep(){
     d.appendChild(el("h4",null,'<span class="sdot" style="background:'+(si===0?"var(--steel)":"#6E9E4A")+'"></span>'+esc(s[0])));
     d.appendChild(el("p","sub",esc(s[1])));
     const marcar = v => ()=>{
+      /* Si el criterio ya estaba completo, la persona está corrigiendo:
+         ahí no se salta, porque saltar en medio de una corrección desorienta. */
+      const estabaCompleto = P.vals[i*2]!=="" && P.vals[i*2+1]!=="";
       P.vals[i*2+si] = (P.vals[i*2+si]===v ? "" : v);
       save("part",P); goStep();
-      if(P.vals[i*2]!=="" && P.vals[i*2+1]!=="" && i<5) setTimeout(()=>{ P.step=i+1; goStep(); }, 220);
+      const quedaCompleto = P.vals[i*2]!=="" && P.vals[i*2+1]!=="";
+      if(!estabaCompleto && quedaCompleto && i<5)
+        setTimeout(()=>{ P.step=i+1; goStep(); alTope(); }, 420);
     };
     const fila = (lista, cls)=>{
       if(cls==="fuera") d.appendChild(el("div","fueralbl","Fuera de la escala"));
@@ -833,6 +884,22 @@ function goStep(){
     fila(FUERA, "fuera");
     box.appendChild(d);
   });
+  const nb=$("#pNotaBox"), na=$("#pNota");
+  na.value = P.notas[i] || "";
+  nb.open = !!na.value;
+  nb.querySelector("summary").textContent = na.value
+    ? "Su nota sobre "+CRIT[i][0]
+    : "Dejar una nota sobre "+CRIT[i][0]+" (opcional)";
+  na.oninput = ()=>{
+    const v = na.value.trim();
+    if(v) P.notas[i] = na.value; else delete P.notas[i];
+    save("part",P);
+    na.style.height="auto"; na.style.height=Math.max(na.scrollHeight,72)+"px";
+  };
+  na.style.height="auto"; na.style.height=Math.max(na.scrollHeight,72)+"px";
+  $("#pNotaAviso").textContent = haySync
+    ? "Su mesa la va a ver junto a esta casilla. No lleva su nombre."
+    : "Sin conexión las notas no viajan: el código solo lleva las doce notas numéricas.";
   $("#pPrev").disabled = i===0;
   $("#pNext").textContent = i===5 ? "Revisar" : "Siguiente";
   $("#pTerrTag").textContent = P.vals.filter(v=>v!=="").length + " de 12";
@@ -867,7 +934,9 @@ $("#pCode").onclick = async ()=>{
   if(haySync){
     const est = $("#eEstado"); est.classList.remove("hide");
     est.className = "eestado esperando"; est.textContent = "Enviando su tablero a la mesa…";
-    const ok = await subir("/votos/"+code, {t:P.terr, v:P.vals.join("")});
+    if(!P.id){ P.id = nuevaPapeleta(); save("part",P); }
+    const ok = await subir("/votos/"+P.id,
+      {t:P.terr, v:P.vals.join(""), c:code, n:P.notas||{}});
     est.className = "eestado " + (ok?"ok":"mal");
     est.textContent = ok
       ? "Listo. Su tablero ya le llegó a la mesa de "+P.terr+"; no tiene que hacer nada más."
@@ -901,8 +970,9 @@ function renderMesa(){
   $("#mStart").disabled = !M.terr;
   $("#mTerr").classList.remove("hide"); $("#mForm").classList.add("hide"); $("#mVotos").classList.add("hide");
   $("#mTitle").textContent = "¿Qué territorio le tocó a esta mesa?";
-  $("#mStart").textContent = (M.terr && M.cartas.some(c=>c.cW||c.cP))
-    ? "Continuar con "+M.terr : "Empezar";
+  const hay = M.terr && (M.cartas.some(c=>c.cW||c.cP) || M.votos.length);
+  $("#mStart").textContent = hay ? "Continuar con "+M.terr : "Empezar";
+  const rh = $("#mRehacer"); if(rh) rh.classList.toggle("hide", !hay);
 }
 let pararVotos = ()=>{}, subirCartaPend = null;
 /* Borra lo de esta mesa aquí y, si había subido cartas, también en la sala.
@@ -925,9 +995,11 @@ function sincronizarMesa(){
   pararVotos = escuchar("/votos", d=>{
     const antes = M.votos.length;
     const manuales = M.votos.filter(v=>v.manual);
+    /* La clave es el identificador de la papeleta, no el código: dos personas
+       que votan exactamente igual cuentan dos veces, como debe ser. */
     const remotos = Object.entries(d||{})
-      .filter(([code,x])=>x && x.t===M.terr && typeof x.v==="string" && x.v.length===12)
-      .map(([code,x])=>({terr:x.t, vals:x.v.split(""), code}));
+      .filter(([id,x])=>x && x.t===M.terr && typeof x.v==="string" && x.v.length===12)
+      .map(([id,x])=>({terr:x.t, vals:x.v.split(""), code:x.c||id, id, notas:x.n||null}));
     const vistos = new Set(remotos.map(v=>v.code));
     M.votos = remotos.concat(manuales.filter(v=>!vistos.has(v.code)));
     save("mesa",M);
@@ -952,6 +1024,10 @@ function agendarSubidaCartas(){
     });
   }, 900);
 }
+$("#mRehacer").onclick = ()=>{
+  if(!confirm("Se borran las seis cartas de "+M.terr+" y se empieza de cero. ¿Seguir?")) return;
+  const t = M.terr; limpiarMesa(t); M.terr=t; M.terrCartas=t; save("mesa",M); renderMesa();
+};
 $("#mStart").onclick = ()=>{
   sincronizarMesa();
   $("#mTerr").classList.add("hide");
@@ -1021,6 +1097,14 @@ function mCards(){
 
     if(abierta){
       const body = el("div","mbody");
+      /* Notas que dejó la gente de esta mesa en la Ronda 1 para este criterio. */
+      const notas = M.votos.map(v=>v.notas && v.notas[i]).filter(x=>x && String(x).trim());
+      if(notas.length){
+        const nc = el("div","notacard");
+        nc.innerHTML = "<b>"+notas.length+" nota"+(notas.length===1?"":"s")+" de su gente sobre "+esc(crit[0])+"</b>"+
+          notas.map(x=>"«"+esc(String(x).trim())+"»").join("<br>");
+        body.appendChild(nc);
+      }
       SECT.forEach((sec,si)=>{
         const key = si===0 ? "cW" : "cP";
         const row = el("div","srow");
@@ -1040,6 +1124,7 @@ function mCards(){
           ESC.forEach(([k])=>{ sum += Number(k)*cuenta[k]; nn += cuenta[k]; });
           if(nn) rp.appendChild(el("span",null,"· promedio "+
             (Math.round(sum/nn*10)/10).toString().replace(".",",")));
+          rp.appendChild(el("span",null,"· "+M.votos.length+" tablero"+(M.votos.length===1?"":"s")));
           row.appendChild(rp);
         }
         const ponerFila = (lista, cls)=>{
@@ -1148,7 +1233,7 @@ function mCards(){
 }
 function mMeta(){
   const ok = M.cartas.filter(cartaLista).length;
-  $("#mCount").textContent = ok+" de 6 listas";
+  $("#mCount").textContent = ok+" de 6 listas · "+M.votos.length+" tablero"+(M.votos.length===1?"":"s")+" en la mesa";
   $("#mExport").disabled = ok===0;
 }
 $("#mExport").onclick = ()=>{
@@ -1193,7 +1278,9 @@ function consolidate(){
   const rows=[];
   CRIT.forEach((c,ci)=>{
     TERR.forEach(t=>{
-      const cell={crit:c[0], terr:t, sect:[], carta:null, sobre:null};
+      const cell={crit:c[0], terr:t, ci, sect:[], carta:null, sobre:null,
+        notas: F.votes.filter(v=>v.terr===t && v.notas && v.notas[ci] && String(v.notas[ci]).trim())
+                      .map(v=>String(v.notas[ci]).trim())};
       for(let s=0;s<2;s++){
         const counts={"1":0,"2":0,"3":0,"4":0,"5":0,G:0,X:0};
         F.votes.filter(v=>v.terr===t).forEach(v=>{ const x=v.vals[ci*2+s]; if(counts[x]!=null) counts[x]++; });
@@ -1306,8 +1393,8 @@ function sincronizarFac(){
   pararFac = escuchar("", d=>{
     const v = (d&&d.votos)||{}, k=(d&&d.cartas)||{};
     F.votes = Object.entries(v)
-      .filter(([code,x])=>x && TFROM[TCODE[x.t]] && typeof x.v==="string" && x.v.length===12)
-      .map(([code,x])=>({terr:x.t, vals:x.v.split(""), code}));
+      .filter(([id,x])=>x && TFROM[TCODE[x.t]] && typeof x.v==="string" && x.v.length===12)
+      .map(([id,x])=>({terr:x.t, vals:x.v.split(""), code:x.c||id, id, notas:x.n||null}));
     F.cartas = [];
     Object.entries(k).forEach(([tc,paq])=>{
       const t = TFROM[tc]; if(!t) return;
@@ -1327,7 +1414,7 @@ function renderFac(){
   const nbr = rows.filter(r=>r.dist>=3).length;
   const nc2 = new Set(F.cartas.map(c=>c.terr+"|"+c.i)).size;
   $("#fStat").innerHTML =
-    '<div style="--sc:var(--steel)"><b>'+nv+'</b><span>Tableros</span></div>'+
+    '<div style="--sc:var(--steel)"><b>'+nv+'</b><span>Personas que votaron</span></div>'+
     '<div style="--sc:var(--crimson)"><b>'+nc2+' <span style="font-size:14px;color:var(--mut)">/ 18</span></b><span>Cartas</span></div>'+
     '<div style="--sc:var(--orange)"><b>'+nbr+'</b><span>Sectores muy separados</span></div>'+
     '<div style="--sc:#6E9E4A;min-width:230px"><b style="font-size:15px;line-height:2.1">'+
@@ -1401,6 +1488,13 @@ function renderFac(){
     const d=el("div","card");
     d.appendChild(el("div",null,"<div style='font-weight:800;font-size:16px;margin-bottom:6px'>Mesa · "+esc(t)+" <span style='color:var(--mut);font-weight:600'>"+got.length+" de 6</span></div>"));
     if(!got.length) d.appendChild(el("p","small","Sin cartas todavía."));
+    const notasT = {};
+    F.votes.filter(v=>v.terr===t && v.notas).forEach(v=>{
+      Object.entries(v.notas).forEach(([i,txt])=>{
+        if(!txt || !String(txt).trim()) return;
+        (notasT[i] = notasT[i] || []).push(String(txt).trim());
+      });
+    });
     got.forEach(r=>{
       const c=r.carta;
       d.appendChild(el("div",null,
@@ -1419,6 +1513,10 @@ function renderFac(){
             (fuenteTxt(c)?"<div class='small' style='margin-top:4px'>"+fuenteTxt(c)+"</div>":"")
           : "<div style='margin-top:4px'>"+esc(c.razon)+
               (fuenteTxt(c)?" <span class='small'>· "+fuenteTxt(c)+"</span>":"")+"</div>")+
+        ((notasT[r.i]||[]).length
+          ? "<div class='notacard' style='margin:7px 0 0'><b>"+notasT[r.i].length+
+            " nota"+(notasT[r.i].length===1?"":"s")+" de la Ronda 1</b>"+
+            notasT[r.i].map(x=>"«"+esc(x)+"»").join("<br>")+"</div>" : "")+
         "</div>"));
     });
     cv.appendChild(d);
@@ -1522,7 +1620,7 @@ $("#sobreLoad").onclick = ()=>{
 };
 $("#fCsv").onclick = ()=>{
   const rows=consolidate();
-  const head=["Criterio","Territorio","Promedio_WASH_Aloj","n_WA","Mesa_WASH_Aloj","Promedio_Prot_ICLA_Educ","n_PIE","Mesa_Prot_ICLA_Educ","Distancia_entre_sectores_en_peldanos","Porque_compartido_o_WASH_Aloj","Porque_Prot_ICLA_Educ","Lo_se_por","Lo_se_por_Prot_ICLA_Educ","Sin_acuerdo","Nuestra_lectura","Por_que_conversarla","Al_plenario"];
+  const head=["Criterio","Territorio","Promedio_WASH_Aloj","n_WA","Mesa_WASH_Aloj","Promedio_Prot_ICLA_Educ","n_PIE","Mesa_Prot_ICLA_Educ","Distancia_entre_sectores_en_peldanos","Porque_compartido_o_WASH_Aloj","Porque_Prot_ICLA_Educ","Lo_se_por","Lo_se_por_Prot_ICLA_Educ","Sin_acuerdo","Notas_ronda1","Nuestra_lectura","Por_que_conversarla","Al_plenario"];
   const q = t => '"'+String(t||"").replace(/"/g,"'")+'"';
   const lines=[head.join(";")];
   rows.forEach(r=>{
@@ -1533,7 +1631,7 @@ $("#fCsv").onclick = ()=>{
       r.dist==null?"":String(r.dist),
       k?q(k.razon):"", k?q(k.razon2):"",
       k&&k.fuente?(FLBL[k.fuente]||k.fuente):"", k&&k.fuente2?(FLBL[k.fuente2]||k.fuente2):"",
-      k&&k.nodeacuerdo?"si":"",
+      k&&k.nodeacuerdo?"si":"", q((r.notas||[]).join("  ||  ")),
       r.sobre?r.sobre.c:"", h?h[0]+" · "+h[1]:"",
       F.debate.indexOf(r.crit+"|"+r.terr)>=0?"si":""].join(";"));
   });
