@@ -153,6 +153,8 @@ label.fld em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:
 .linkish:hover{color:var(--crimson)}
 .aviso-sep{margin:12px 0 0;font-size:12.5px;color:#A63C00;background:#FFF6F0;border-left:4px solid var(--orange);
   border-radius:0 8px 8px 0;padding:8px 11px;line-height:1.4}
+.sok{color:#2E7D32;font-weight:700}
+.smal{color:var(--crimson);font-weight:700}
 .count{font-size:11.5px;color:var(--mut);text-align:right;margin-top:3px}
 .count.over{color:var(--r);font-weight:800}
 
@@ -314,9 +316,9 @@ label.fld em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:
     <summary>Cómo se corre la actividad, minuto a minuto</summary>
     <div class="tl">
       <div class="tlrow" style="--c:var(--steel)"><b>0–5</b><div><strong>Encuadre</strong><span>Se comparte el enlace por el chat. Se anuncian las mesas y sus territorios. Cada mesa nombra portavoz y escriba.</span></div></div>
-      <div class="tlrow" style="--c:var(--steel)"><b>5–12</b><div><strong>Cada quien, solo</strong><span>Todos entran en «Voy a votar», eligen su territorio y pintan doce casillas. Al terminar le entregan su código a su mesa.</span></div></div>
-      <div class="tlrow" style="--c:var(--crimson)"><b>12–28</b><div><strong>Mesas</strong><span>Un dispositivo por mesa recoge los códigos de sus integrantes y escribe seis cartas. Al terminar, «Copiar mis cartas» y mandarlas a quien facilita.</span></div></div>
-      <div class="tlrow" style="--c:var(--crimson)"><b>28–40</b><div><strong>Puesta en común</strong><span>Quien facilita pega los tres bloques en «Consolidar» y proyecta el mapa. Cuatro minutos por mesa.</span></div></div>
+      <div class="tlrow" style="--c:var(--steel)"><b>5–12</b><div><strong>Cada quien, solo</strong><span id="tl1">Todos entran en «Voy a votar», eligen su territorio y pintan doce casillas. Al terminar le entregan su código a su mesa.</span></div></div>
+      <div class="tlrow" style="--c:var(--crimson)"><b>12–28</b><div><strong>Mesas</strong><span id="tl2">Un dispositivo por mesa recoge los códigos de sus integrantes y escribe seis cartas. Al terminar, «Copiar mis cartas» y mandarlas a quien facilita.</span></div></div>
+      <div class="tlrow" style="--c:var(--crimson)"><b>28–40</b><div><strong>Puesta en común</strong><span id="tl3">Quien facilita pega los tres bloques en «Consolidar» y proyecta el mapa. Cuatro minutos por mesa.</span></div></div>
       <div class="tlrow" style="--c:var(--orange)"><b>40–50</b><div><strong>Se abre el sobre</strong><span>Botón «Abrir el sobre». La pestaña de casillas calientes ya trae las candidatas ordenadas. Se discuten dos.</span></div></div>
       <div class="tlrow" style="--c:#6E9E4A"><b>50–60</b><div><strong>Ficha única y cierre</strong><span>Una recomendación por persona, compromisos de dato y descarga del CSV para el informe.</span></div></div>
     </div>
@@ -405,6 +407,7 @@ label.fld em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:
     <div id="mCards"></div>
     <div class="mbar">
       <span class="small" id="mCount"></span>
+      <span class="small" id="mSync"></span>
       <div class="spacer"></div>
       <button class="btn ghost sm" id="mClear">Borrar</button>
       <button class="btn teal" id="mExport">Copiar mis cartas</button>
@@ -843,7 +846,13 @@ function agendarSubidaCartas(){
     const paq = {};
     M.cartas.forEach((c,i)=>{ if(c.cW||c.cP) paq[i] = {cW:c.cW||"", cP:c.cP||"", razon:c.razon||"",
       razon2:c.razon2||"", sep:!!separado(c), fuente:c.fuente||"", nd:!!c.nodeacuerdo}; });
-    subir("/cartas/"+TCODE[M.terr], paq);
+    const ind = $("#mSync"); if(ind) ind.textContent = "guardando…";
+    subir("/cartas/"+TCODE[M.terr], paq).then(ok=>{
+      if(!ind) return;
+      ind.textContent = ok ? "guardado ✓ · ya está en la consolidación"
+                           : "sin conexión · copien el bloque de respaldo";
+      ind.className = "small " + (ok?"sok":"smal");
+    });
   }, 900);
 }
 $("#mStart").onclick = ()=>{
@@ -1276,9 +1285,14 @@ else {
     pPie: "Puede corregir y volver a enviar: vale el último. No tiene que hacer nada más.",
     mVTit: "Los tableros de esta mesa",
     mVLead: "Van apareciendo solos, apenas cada quien presiona Enviar. Cuando estén todos, empiecen las cartas: van a ver, casilla por casilla, qué puso cada quien antes de acordar el color.",
-    fLead: "El mapa se arma solo con lo que van enviando las personas y las mesas: no hay que pegar nada. Proyecte esta pantalla y déjela abierta."
+    fLead: "El mapa se arma solo con lo que van enviando las personas y las mesas: no hay que pegar nada. Proyecte esta pantalla y déjela abierta.",
+    mOutLbl: "Bloque de respaldo — solo hace falta si se cae la conexión",
+    tl1: "Todos entran en «Voy a votar», eligen su territorio y pintan doce casillas. Al terminar presionan Enviar y su tablero le llega solo a su mesa.",
+    tl2: "Un dispositivo por mesa ve los tableros de sus integrantes ya cargados y escribe seis cartas. Se guardan solas: no hay que mandar nada.",
+    tl3: "Quien facilita proyecta «Consolidar»: el mapa ya está armado con lo que enviaron las mesas. Cuatro minutos por mesa."
   };
   for(const k in txt){ const e=$("#"+k); if(e) e.textContent = txt[k]; }
+  const ex=$("#mExport"); if(ex){ ex.textContent="Copiar el bloque de respaldo"; ex.className="btn ghost sm"; }
   bajar("/meta").then(()=>{});
 }
 </script>
