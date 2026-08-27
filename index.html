@@ -587,7 +587,7 @@ function encodeCartas(terr, cartas, votos){
   cartas.forEach((c,i)=>{
     if(!c || (!c.cW && !c.cP)) return;
     L.push([i+1, (c.cW||"-")+"/"+(c.cP||"-"), limpio(c.razon), c.fuente||"",
-            limpio(c.razon2), c.nodeacuerdo?"!":""].join("|"));
+            limpio(c.razon2), c.nodeacuerdo?"!":"", c.fuente2||""].join("|"));
   });
   L.push("#FIN");
   if(votos && votos.length) L.push("#VOTOS "+votos.map(v=>v.code).join(" "));
@@ -613,7 +613,8 @@ function parsePaste(txt){
       cartas.push({
         terr:tname, i:idx-1, cW, cP,
         razon:(parts[2]||"").trim(), fuente:(parts[3]||"").trim().toUpperCase(),
-        razon2:(parts[4]||"").trim(), nodeacuerdo:(parts[5]||"").trim()==="!"
+        razon2:(parts[4]||"").trim(), nodeacuerdo:(parts[5]||"").trim()==="!",
+        fuente2:(parts[6]||"").trim().toUpperCase()
       });
     });
   }
@@ -695,7 +696,7 @@ function escuchar(p, alCambiar){
 
 /* ═══════════════════════════ estado ═══════════════════════════ */
 let P = load("part", {terr:null, vals:Array(12).fill(""), step:0});
-const NUEVA_CARTA = ()=>({cW:"",cP:"",razon:"",razon2:"",sep:false,fuente:"",nodeacuerdo:false});
+const NUEVA_CARTA = ()=>({cW:"",cP:"",razon:"",razon2:"",sep:false,fuente:"",fuente2:"",nodeacuerdo:false});
 let M = load("mesa", {terr:null, open:0, votos:[], cartas:Array(6).fill(null).map(NUEVA_CARTA)});
 if(!M.cartas || !M.cartas[0] || !("cW" in M.cartas[0])) M = {terr:M.terr||null, open:0, votos:[], cartas:Array(6).fill(null).map(NUEVA_CARTA)};
 if(!M.votos) M.votos = [];
@@ -883,7 +884,7 @@ function agendarSubidaCartas(){
   subirCartaPend = setTimeout(()=>{
     const paq = {};
     M.cartas.forEach((c,i)=>{ if(c.cW||c.cP) paq[i] = {cW:c.cW||"", cP:c.cP||"", razon:c.razon||"",
-      razon2:c.razon2||"", sep:!!separado(c), fuente:c.fuente||"", nd:!!c.nodeacuerdo}; });
+      razon2:c.razon2||"", sep:!!separado(c), fuente:c.fuente||"", fuente2:c.fuente2||"", nd:!!c.nodeacuerdo}; });
     const ind = $("#mSync"); if(ind) ind.textContent = "guardando…";
     subir("/cartas/"+TCODE[M.terr], paq).then(ok=>{
       if(!ind) return;
@@ -1017,7 +1018,11 @@ function mCards(){
         campo("razon2", "Porque… en "+SECT[1][0], "", SCOL[1], "En protección sí hubo ajuste caso a caso.");
         if(!seSepara(c)){
           const un = el("button","linkish","← Volver a un solo porqué para los dos sectores");
-          un.onclick=()=>{ c.sep=false; save("mesa",M); agendarSubidaCartas(); mCards(); };
+          un.onclick=()=>{
+            if((c.razon2||"").trim() && !confirm("Se borra lo escrito para Protección, ICLA y Educación. ¿Seguir?")) return;
+            c.sep=false; c.razon2=""; c.fuente2="";
+            save("mesa",M); agendarSubidaCartas(); mCards();
+          };
           body.appendChild(un);
         }
       } else {
@@ -1028,14 +1033,27 @@ function mCards(){
         body.appendChild(sp);
       }
 
-      body.appendChild(el("label","fld","Lo sé por"));
-      const fw=el("div","chips");
-      FUENTES.forEach(([k,lbl])=>{
-        const bt=el("button","chip",lbl); bt.setAttribute("aria-pressed", c.fuente===k);
-        bt.onclick=()=>{ c.fuente = c.fuente===k?"":k; save("mesa",M); agendarSubidaCartas(); mCards(); };
-        fw.appendChild(bt);
-      });
-      body.appendChild(fw);
+      /* «Lo sé por» sigue al porqué: si la razón va separada, la fuente también,
+         porque casi nunca dos sectores se saben por la misma vía. */
+      const fuenteFila = (destino, etiqueta, color)=>{
+        const lab = el("label","fld");
+        if(color){ lab.innerHTML = '<i class="sdot" style="background:'+color+'"></i>'+esc(etiqueta); }
+        else lab.textContent = etiqueta;
+        body.appendChild(lab);
+        const fw=el("div","chips");
+        FUENTES.forEach(([k,lbl])=>{
+          const bt=el("button","chip",lbl); bt.setAttribute("aria-pressed", c[destino]===k);
+          bt.onclick=()=>{ c[destino] = c[destino]===k?"":k; save("mesa",M); agendarSubidaCartas(); mCards(); };
+          fw.appendChild(bt);
+        });
+        body.appendChild(fw);
+      };
+      if(separado(c)){
+        fuenteFila("fuente",  "Lo sé por… en "+SECT[0][0], SCOL[0]);
+        fuenteFila("fuente2", "Lo sé por… en "+SECT[1][0], SCOL[1]);
+      } else {
+        fuenteFila("fuente", "Lo sé por", null);
+      }
 
       const ck = el("button","ck",'<span class="box"></span><span>La mesa no se puso de acuerdo en esta casilla</span>');
       ck.setAttribute("aria-pressed", !!c.nodeacuerdo);
@@ -1119,6 +1137,15 @@ function consolidate(){
      dentro de la misma carta. Son hechos del ejercicio.
    · lo que se puede PREGUNTAR — el contraste con la lectura provisional del
      equipo evaluador, que es una hipótesis de trabajo y no un resultado.     */
+/* Texto de la fuente: una sola si es compartida, las dos rotuladas si difieren. */
+function fuenteTxt(k){
+  const a = k.fuente ? (FLBL[k.fuente]||k.fuente) : "";
+  const b = k.fuente2 ? (FLBL[k.fuente2]||k.fuente2) : "";
+  if(!a && !b) return "";
+  if(!b || a===b) return esc(a||b);
+  return "<span style='color:"+SCOL[0]+"'>W:</span> "+esc(a||"—")+
+         " <span style='color:"+SCOL[1]+"'>P:</span> "+esc(b);
+}
 function hotOf(cell){
   const k = cell.carta;
   if(!k) return null;
@@ -1149,9 +1176,15 @@ function hotOf(cell){
   if(sv && cols.some(c=>(c==="V"&&sv==="R")||(c==="R"&&sv==="V")))
     return [2,"Nuestra lectura provisional y la de la mesa se cruzan",
       "Leímos esta casilla al revés que ellos. No sabemos todavía quién tiene razón: por eso se pregunta antes de redactar."];
-  if(k.fuente==="CZ"||k.fuente==="CO")
-    return [3,"Sustento por confirmar",
-      "La carta se sostiene en «"+(FLBL[k.fuente]||k.fuente).toLowerCase()+"». Sirve igual, pero conviene saber si hay algo detrás antes de apoyarse en ella."];
+  {
+    const flojo = f => f==="CZ" || f==="CO";
+    const fs = [];
+    if(flojo(k.fuente))  fs.push((k.fuente2 && k.fuente2!==k.fuente ? "en WASH y Alojamiento, " : "")+"«"+(FLBL[k.fuente]||k.fuente).toLowerCase()+"»");
+    if(flojo(k.fuente2) && k.fuente2!==k.fuente) fs.push("en Protección, ICLA y Educación, «"+(FLBL[k.fuente2]||k.fuente2).toLowerCase()+"»");
+    if(fs.length)
+      return [3,"Sustento por confirmar",
+        "La carta se sostiene "+fs.join(" y ")+". Sirve igual, pero conviene saber si hay algo detrás antes de apoyarse en ella."];
+  }
   if(dW==="G"||dP==="G")
     return [3,"Casi nadie sabía en un bloque",
       "Ahí hay un vacío de información: el informe tendrá que declararlo en vez de rellenarlo."];
@@ -1175,7 +1208,7 @@ function sincronizarFac(){
       Object.entries(paq||{}).forEach(([i,c])=>{
         if(!c || (!c.cW && !c.cP)) return;
         F.cartas.push({terr:t, i:+i, cW:c.cW||"", cP:c.cP||"", razon:c.razon||"",
-                       razon2:c.razon2||"", sep:!!c.sep, fuente:c.fuente||"", nodeacuerdo:!!c.nd});
+                       razon2:c.razon2||"", sep:!!c.sep, fuente:c.fuente||"", fuente2:c.fuente2||"", nodeacuerdo:!!c.nd});
       });
     });
     save("fac",F); renderFac();
@@ -1213,7 +1246,7 @@ function renderFac(){
        cellTd(r.sect[0].dom,nW)+(k&&k.cW?cellTd(k.cW):"<td class='cnone'>—</td>")+
        cellTd(r.sect[1].dom,nP)+(k&&k.cP?cellTd(k.cP):"<td class='cnone'>—</td>")+
        "<td style='text-align:center'>"+br+"</td>"+
-       "<td class='small'>"+(k&&k.fuente?esc(FLBL[k.fuente]||k.fuente):"")+(k&&k.nodeacuerdo?" <b style='color:var(--crimson)'>· sin acuerdo</b>":"")+"</td>"+
+       "<td class='small'>"+(k?fuenteTxt(k):"")+(k&&k.nodeacuerdo?" <b style='color:var(--crimson)'>· sin acuerdo</b>":"")+"</td>"+
        (F.sobreOpen&&r.sobre?cellTd(r.sobre.c):"<td class='cnone'>✉︎</td>")+"</tr>";
   });
   $("#fTable").innerHTML=h;
@@ -1271,9 +1304,9 @@ function renderFac(){
               "<b style='color:"+SCOL[0]+"'>WASH/Aloj.:</b> "+esc(c.razon)+"</div>"+
             "<div style='margin-top:4px;padding-left:10px;border-left:3px solid "+SCOL[1]+";font-size:13.5px'>"+
               "<b style='color:"+SCOL[1]+"'>Prot./ICLA/Educ.:</b> "+esc(c.razon2)+"</div>"+
-            (c.fuente?"<div class='small' style='margin-top:4px'>"+esc(FLBL[c.fuente]||c.fuente)+"</div>":"")
+            (fuenteTxt(c)?"<div class='small' style='margin-top:4px'>"+fuenteTxt(c)+"</div>":"")
           : "<div style='margin-top:4px'>"+esc(c.razon)+
-              (c.fuente?" <span class='small'>· "+esc(FLBL[c.fuente]||c.fuente)+"</span>":"")+"</div>")+
+              (fuenteTxt(c)?" <span class='small'>· "+fuenteTxt(c)+"</span>":"")+"</div>")+
         "</div>"));
     });
     cv.appendChild(d);
@@ -1338,7 +1371,7 @@ $("#sobreLoad").onclick = ()=>{
 };
 $("#fCsv").onclick = ()=>{
   const rows=consolidate();
-  const head=["Criterio","Territorio","Voto_WASH_Aloj","n_WA","Mesa_WASH_Aloj","Voto_Prot_ICLA_Educ","n_PIE","Mesa_Prot_ICLA_Educ","Distancia_entre_sectores","Porque_compartido_o_WASH_Aloj","Porque_Prot_ICLA_Educ","Lo_se_por","Sin_acuerdo","Evaluacion","Casilla_caliente","Al_plenario"];
+  const head=["Criterio","Territorio","Voto_WASH_Aloj","n_WA","Mesa_WASH_Aloj","Voto_Prot_ICLA_Educ","n_PIE","Mesa_Prot_ICLA_Educ","Distancia_entre_sectores","Porque_compartido_o_WASH_Aloj","Porque_Prot_ICLA_Educ","Lo_se_por","Lo_se_por_Prot_ICLA_Educ","Sin_acuerdo","Evaluacion","Casilla_caliente","Al_plenario"];
   const q = t => '"'+String(t||"").replace(/"/g,"'")+'"';
   const lines=[head.join(";")];
   rows.forEach(r=>{
@@ -1348,7 +1381,8 @@ $("#fCsv").onclick = ()=>{
       r.sect[1].dom,r.sect[1].n,k?k.cP:"",
       r.brecha==="NO"?"dos peldanos":(r.brecha==="CASI"?"un peldano":(r.brecha==="SI"?"igual":"")),
       k?q(k.razon):"", k?q(k.razon2):"",
-      k&&k.fuente?(FLBL[k.fuente]||k.fuente):"", k&&k.nodeacuerdo?"si":"",
+      k&&k.fuente?(FLBL[k.fuente]||k.fuente):"", k&&k.fuente2?(FLBL[k.fuente2]||k.fuente2):"",
+      k&&k.nodeacuerdo?"si":"",
       r.sobre?r.sobre.c:"", h?h[0]+" · "+h[1]:"",
       F.debate.indexOf(r.crit+"|"+r.terr)>=0?"si":""].join(";"));
   });
