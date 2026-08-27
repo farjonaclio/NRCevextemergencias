@@ -1619,6 +1619,16 @@ function renderPlenario(rows){
     const crecer = ()=>{ ta.style.height="auto"; ta.style.height=Math.max(ta.scrollHeight,80)+"px"; };
     ta.oninput = ()=>{ F.conclusiones[key]=ta.value; save("fac",F); crecer(); };
     d.appendChild(lab); d.appendChild(ta); setTimeout(crecer,0);
+
+    /* Sacarla del plenario sin volver a «Dónde conversar». Lo escrito no se
+       borra: si la vuelve a traer, la conclusión sigue ahí. */
+    const quitar = el("button","linkish","Quitar del plenario");
+    quitar.style.margin = "10px 0 0";
+    quitar.onclick = ()=>{
+      const i = F.debate.indexOf(key);
+      if(i>=0){ F.debate.splice(i,1); save("fac",F); renderFac(); toast("Fuera del plenario · lo escrito se conserva"); }
+    };
+    d.appendChild(quitar);
     box.appendChild(d);
   });
 }
@@ -1802,13 +1812,17 @@ function renderFac(){
     const d=el("div","hot p"+Math.min(h[0],3)+(sel?" elegida":""));
     d.innerHTML='<div class="h"><span class="tag">'+h[0]+'</span>'+esc(r.crit)+' × '+esc(r.terr)+' — '+esc(h[1])+'</div>'+
       '<div class="why">'+esc(h[2])+(r.carta&&r.carta.razon?' <b>«'+esc(r.carta.razon)+'»</b>':'')+'</div>';
-    const b=el("button","hotpick"+(sel?" on":""), sel?"✓ En el plenario":"Llevar al plenario");
+    const b=el("button","hotpick"+(sel?" on":""), sel?"✓ En el plenario · quitar":"Llevar al plenario");
+    b.title = sel ? "Presione para sacarla del plenario" : "Presione para llevarla al plenario";
     b.setAttribute("aria-pressed", sel);
     b.onclick=()=>{
       const k=clave(r), i=F.debate.indexOf(k);
       if(i>=0) F.debate.splice(i,1);
       else {
-        if(F.debate.length>=2 && !confirm("Ya hay dos casillas elegidas y el bloque dura diez minutos.\n\n¿Agregar una tercera igual?")) return;
+          if(F.debate.length>=2 && !confirm(
+          "Ya hay dos casillas elegidas y el bloque dura diez minutos: cinco por casilla.\n\n"+
+          "Puede agregar esta tercera y después quitar otra, con «Quitar del plenario», "+
+          "acá mismo o en la pestaña «Al plenario».\n\n¿Agregarla?")) return;
         F.debate.push(k);
       }
       save("fac",F); renderFac();
