@@ -145,6 +145,14 @@ textarea,input[type=text]{width:100%;font:inherit;font-size:14px;border:1.5px so
 textarea:focus,input:focus{outline:2px solid var(--teal);outline-offset:1px}
 .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px}
 label.fld{display:block;font-size:11.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mut);margin:12px 0 5px}
+label.fld{display:flex;align-items:center;gap:7px}
+label.fld i.sdot{width:9px;height:9px;border-radius:3px;flex:none;font-style:normal}
+label.fld em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:400;font-size:11px;color:var(--mut);opacity:.85;margin-left:auto;text-align:right}
+.linkish{display:inline-block;margin:9px 0 2px;border:0;background:none;padding:4px 0;cursor:pointer;
+  font:inherit;font-size:13px;font-weight:600;color:var(--teal);text-decoration:underline;text-underline-offset:3px}
+.linkish:hover{color:var(--crimson)}
+.aviso-sep{margin:12px 0 0;font-size:12.5px;color:#A63C00;background:#FFF6F0;border-left:4px solid var(--orange);
+  border-radius:0 8px 8px 0;padding:8px 11px;line-height:1.4}
 .count{font-size:11.5px;color:var(--mut);text-align:right;margin-top:3px}
 .count.over{color:var(--r);font-weight:800}
 
@@ -166,6 +174,11 @@ label.fld{display:block;font-size:11.5px;font-weight:800;letter-spacing:.05em;te
 .stat b{display:block;font-family:var(--disp);font-weight:700;font-size:26px;line-height:1.1;font-variant-numeric:tabular-nums}
 .stat span{font-size:11.5px;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
 
+#mVMan{margin-top:18px;border-top:1px solid var(--line);padding-top:10px}
+#mVMan>summary{cursor:pointer;list-style:none;font-size:13.5px;color:var(--mut);font-weight:600;padding:4px 0}
+#mVMan>summary::-webkit-details-marker{display:none}
+#mVMan>summary:before{content:"▸ ";color:var(--crimson);font-weight:700}
+#mVMan[open]>summary:before{content:"▾ "}
 .howto{border:1px solid var(--line);border-radius:var(--radius);padding:0;margin:18px 0 0;background:#fff;overflow:hidden}
 .howto summary{cursor:pointer;padding:14px 18px;font-family:var(--disp);font-weight:600;font-size:15px;list-style:none;background:var(--lgt)}
 .howto summary::-webkit-details-marker{display:none}
@@ -270,7 +283,7 @@ label.fld{display:block;font-size:11.5px;font-weight:800;letter-spacing:.05em;te
     <div class="hero-body">
       <p class="eyebrow" style="color:var(--lime)">Taller de resultados preliminares · una hora</p>
       <h1 style="color:#fff">Ustedes vivieron la respuesta.<br>Nosotros la leímos.</h1>
-      <p style="color:#C8D2DD;max-width:62ch;margin:0">Antes de abrir nuestra lectura queremos la de ustedes. Primero cada quien valora su propio territorio separando dos bloques sectoriales; después las mesas escriben por qué. Nada de lo que escriba sale de su dispositivo hasta que usted lo copie.</p>
+      <p id="hHero" style="color:#C8D2DD;max-width:62ch;margin:0">Antes de abrir nuestra lectura queremos la de ustedes. Primero cada quien valora su propio territorio separando dos bloques sectoriales; después las mesas escriben por qué. Nada de lo que escriba sale de su dispositivo hasta que usted lo copie.</p>
     </div>
     <div class="hero-env" aria-hidden="true"><div class="env"><span>40′</span></div><b>No abrir antes</b></div>
   </div>
@@ -279,17 +292,17 @@ label.fld{display:block;font-size:11.5px;font-weight:800;letter-spacing:.05em;te
     <button class="role" data-go="part" style="--rc:var(--steel)">
       <div class="num">1</div>
       <b>Voy a votar</b>
-      <em>Mi territorio, doce casillas, siete minutos. Al final me da un código de catorce letras para entregarle a mi mesa.</em>
+      <em id="hRol1">Mi territorio, doce casillas, siete minutos. Al final me da un código de catorce letras para entregarle a mi mesa.</em>
     </button>
     <button class="role" data-go="mesa" style="--rc:var(--crimson)">
       <div class="num">2</div>
       <b>Soy una mesa</b>
-      <em>Recojo los códigos de mi mesa y escribo seis cartas: un color por sector, la razón y de dónde lo sé.</em>
+      <em id="hRol2">Recojo los códigos de mi mesa y escribo seis cartas: un color por sector, la razón y de dónde lo sé.</em>
     </button>
     <button class="role" data-go="fac" style="--rc:var(--lime)">
       <div class="num">3</div>
       <b>Consolidar</b>
-      <em>Para quien facilita. Pego los tres bloques de las mesas y sale el mapa, las casillas calientes y el sobre.</em>
+      <em id="hRol3">Para quien facilita. Pego los tres bloques de las mesas y sale el mapa, las casillas calientes y el sobre.</em>
     </button>
   </div>
 
@@ -348,8 +361,8 @@ label.fld{display:block;font-size:11.5px;font-weight:800;letter-spacing:.05em;te
 
   <div id="pDone" class="hide">
     <div class="entrega">
-      <div class="epaso"><b>1</b><div><strong>Este es su tablero, en catorce letras</strong>
-        <span>No lleva su nombre: solo el territorio y los doce colores.</span></div></div>
+      <div class="epaso"><b>1</b><div><strong id="pE1t">Este es su tablero, en catorce letras</strong>
+        <span id="pE1s">No lleva su nombre: solo el territorio y los doce colores.</span></div></div>
       <div class="code" id="pCodeOut"></div>
       <div class="epaso" id="pasoDos"><b>2</b><div><strong>Entrégueselo a su mesa</strong>
         <span>Si está en la sala, muestre esta pantalla a quien esté escribiendo en la mesa. Si está conectado, péguelo en el chat.</span></div></div>
@@ -359,7 +372,7 @@ label.fld{display:block;font-size:11.5px;font-weight:800;letter-spacing:.05em;te
       <button class="btn teal" id="pCopy">Copiar el código</button>
       <button class="btn ghost" id="pEdit">Corregir mi tablero</button>
     </div>
-    <p class="small" style="margin-top:12px">Puede corregir y generar otro: vale el último. La mesa los junta todos y los manda en un solo bloque, así que usted no tiene que hacer nada más.</p>
+    <p class="small" style="margin-top:12px" id="pPie">Puede corregir y generar otro: vale el último. La mesa los junta todos y los manda en un solo bloque, así que usted no tiene que hacer nada más.</p>
   </div>
 </section>
 
@@ -375,18 +388,20 @@ label.fld{display:block;font-size:11.5px;font-weight:800;letter-spacing:.05em;te
   </div>
 
   <div id="mVotos" class="hide">
-    <h2 style="margin-top:2px">¿Quiénes están en esta mesa?</h2>
-    <p class="lead">Cada persona de la mesa acaba de llenar su tablero y tiene un código de catorce letras. Recójanlos aquí: van a ver, casilla por casilla, qué puso cada quien antes de acordar el color.</p>
-    <textarea id="mVIn" rows="3" placeholder="Escriban o peguen los códigos, uno por línea o separados por espacios…"></textarea>
-    <div class="nav">
-      <button class="btn" id="mVAdd">Cargar</button>
-      <button class="btn ghost" id="mVSkip">Seguir sin códigos</button>
-    </div>
+    <h2 style="margin-top:2px" id="mVTit">¿Quiénes están en esta mesa?</h2>
+    <p class="lead" id="mVLead">Cada persona de la mesa acaba de llenar su tablero y tiene un código de catorce letras. Recójanlos aquí: van a ver, casilla por casilla, qué puso cada quien antes de acordar el color.</p>
     <div id="mVList"></div>
+    <details id="mVMan"><summary>Meter un código a mano</summary>
+      <textarea id="mVIn" rows="3" placeholder="Escriban o peguen los códigos, uno por línea o separados por espacios…"></textarea>
+      <div class="nav">
+        <button class="btn" id="mVAdd">Cargar</button>
+        <button class="btn ghost" id="mVSkip">Seguir sin códigos</button>
+      </div>
+    </details>
   </div>
 
   <div id="mForm" class="hide">
-    <div class="notice"><b>La única regla dura:</b> una casilla con color y sin razón no entra al informe. Si los dos sectores les quedan distintos, la app les va a pedir una línea más — esa es la que más nos sirve.</div>
+    <div class="notice"><b>La única regla dura:</b> una casilla con color y sin razón no entra al informe. El porqué puede ir compartido o separado por sector: ese botón está siempre en la carta, y si los dos colores les quedan distintos se separa solo — esa línea es la que más nos sirve.</div>
     <div id="mCards"></div>
     <div class="mbar">
       <span class="small" id="mCount"></span>
@@ -658,7 +673,7 @@ function escuchar(p, alCambiar){
 
 /* ═══════════════════════════ estado ═══════════════════════════ */
 let P = load("part", {terr:null, vals:Array(12).fill(""), step:0});
-const NUEVA_CARTA = ()=>({cW:"",cP:"",razon:"",razon2:"",fuente:"",nodeacuerdo:false});
+const NUEVA_CARTA = ()=>({cW:"",cP:"",razon:"",razon2:"",sep:false,fuente:"",nodeacuerdo:false});
 let M = load("mesa", {terr:null, open:0, votos:[], cartas:Array(6).fill(null).map(NUEVA_CARTA)});
 if(!M.cartas || !M.cartas[0] || !("cW" in M.cartas[0])) M = {terr:M.terr||null, open:0, votos:[], cartas:Array(6).fill(null).map(NUEVA_CARTA)};
 if(!M.votos) M.votos = [];
@@ -757,7 +772,8 @@ function review(){
   t.innerHTML=h;
   t.querySelectorAll("td[data-i]").forEach(td=>td.onclick=()=>{ P.step=Math.floor(+td.dataset.i/2); save("part",P); goStep(); });
   $("#pCode").disabled = P.vals.some(v=>v==="");
-  $("#pCode").textContent = P.vals.some(v=>v==="") ? "Faltan casillas por marcar" : "Generar mi código";
+  $("#pCode").textContent = P.vals.some(v=>v==="") ? "Faltan casillas por marcar"
+                          : (haySync ? "Enviar mi tablero a la mesa" : "Generar mi código");
 }
 $("#pBack").onclick = ()=>{ P.step=0; goStep(); };
 $("#pCode").onclick = async ()=>{
@@ -822,7 +838,7 @@ function agendarSubidaCartas(){
   subirCartaPend = setTimeout(()=>{
     const paq = {};
     M.cartas.forEach((c,i)=>{ if(c.cW||c.cP) paq[i] = {cW:c.cW||"", cP:c.cP||"", razon:c.razon||"",
-      razon2:c.razon2||"", fuente:c.fuente||"", nd:!!c.nodeacuerdo}; });
+      razon2:c.razon2||"", sep:!!separado(c), fuente:c.fuente||"", nd:!!c.nodeacuerdo}; });
     subir("/cartas/"+TCODE[M.terr], paq);
   }, 900);
 }
@@ -855,6 +871,11 @@ function mVotosList(){
     box.appendChild(el("p","small", haySync
       ? "Esperando. Los tableros de su mesa van a aparecer aquí solos, apenas cada quien termine de votar."
       : "Todavía no hay ninguno. Pueden seguir sin códigos y llenar las cartas a mano, pero pierden el reparto de cada casilla."));
+    if(haySync){
+      const go=el("div","nav");
+      const b2=el("button","btn ghost","Empezar las cartas sin esperar");
+      b2.onclick=irACartas; go.appendChild(b2); box.appendChild(go);
+    }
   } else {
     M.votos.forEach((v,i)=>{
       const c=el("span","vchip",'<b>'+esc(v.code.slice(0,5))+'…</b>'+(v.manual?'':' <span class="small">auto</span>'));
@@ -868,8 +889,9 @@ function mVotosList(){
   }
 }
 
-const cartaLista = c => (c.cW||c.cP) && (c.razon||"").trim() && (!seSepara(c) || (c.razon2||"").trim());
-const seSepara = c => !!(c.cW && c.cP && c.cW!==c.cP);
+const seSepara = c => !!(c.cW && c.cP && c.cW!==c.cP);      // los COLORES quedaron distintos
+const separado = c => seSepara(c) || !!c.sep;                // el PORQUÉ va por sector
+const cartaLista = c => (c.cW||c.cP) && (c.razon||"").trim() && (!separado(c) || (c.razon2||"").trim());
 
 function mCards(){
   $("#mTitle").innerHTML = 'Mesa · <span style="color:'+TCOLOR[M.terr]+'">'+esc(M.terr)+'</span>';
@@ -916,22 +938,39 @@ function mCards(){
         body.appendChild(row);
       });
 
-      body.appendChild(el("label","fld","Porque… (una frase, máximo 15 palabras)"));
-      const ta=el("textarea"); ta.rows=2; ta.value=c.razon||"";
-      ta.placeholder="Los kits no variaron con el diagnóstico.";
-      const cnt=el("div","count");
-      const upd=()=>{ const w=ta.value.trim()?ta.value.trim().split(/\s+/).length:0;
-        cnt.textContent=w+" / 15 palabras"; cnt.classList.toggle("over", w>15); };
-      ta.oninput=()=>{ c.razon=ta.value; upd(); save("mesa",M); agendarSubidaCartas(); mMeta(); };
-      body.appendChild(ta); body.appendChild(cnt); upd();
+      /* ── el porqué ──────────────────────────────────────────────
+         Compartido por defecto, pero la posibilidad de separarlo está
+         siempre a la vista. Si los dos colores quedaron distintos, se
+         separa solo y ya no se puede volver a juntar. */
+      const campo = (destino, etiqueta, sub, color, ph)=>{
+        const lab = el("label","fld");
+        if(color){ lab.innerHTML = '<i class="sdot" style="background:'+color+'"></i>'+esc(etiqueta)+
+                                   (sub?'<em>'+esc(sub)+'</em>':''); }
+        else lab.textContent = etiqueta;
+        body.appendChild(lab);
+        const ta=el("textarea"); ta.rows=2; ta.value=c[destino]||""; ta.placeholder=ph;
+        const cnt=el("div","count");
+        const upd=()=>{ const w=ta.value.trim()?ta.value.trim().split(/\s+/).length:0;
+          cnt.textContent=w+" / 15 palabras"; cnt.classList.toggle("over", w>15); };
+        ta.oninput=()=>{ c[destino]=ta.value; upd(); save("mesa",M); agendarSubidaCartas(); mMeta(); };
+        body.appendChild(ta); body.appendChild(cnt); upd();
+      };
 
-      if(seSepara(c)){
-        const sp = el("div","split");
-        sp.appendChild(el("b",null,"Los dos sectores les quedaron distintos. ¿Por qué se separan?"));
-        const t2=el("textarea"); t2.rows=2; t2.value=c.razon2||"";
-        t2.placeholder="En protección sí hubo ajuste caso a caso; en los kits no.";
-        t2.oninput=()=>{ c.razon2=t2.value; save("mesa",M); agendarSubidaCartas(); mMeta(); };
-        sp.appendChild(t2);
+      if(separado(c)){
+        if(seSepara(c)) body.appendChild(el("p","aviso-sep",
+          "Los dos colores les quedaron distintos, así que el porqué va por separado."));
+        campo("razon",  "Porque… en "+SECT[0][0], "", SCOL[0], "Los kits no variaron con el diagnóstico.");
+        campo("razon2", "Porque… en "+SECT[1][0], "", SCOL[1], "En protección sí hubo ajuste caso a caso.");
+        if(!seSepara(c)){
+          const un = el("button","linkish","← Volver a un solo porqué para los dos sectores");
+          un.onclick=()=>{ c.sep=false; save("mesa",M); agendarSubidaCartas(); mCards(); };
+          body.appendChild(un);
+        }
+      } else {
+        campo("razon", "Porque… (una frase, máximo 15 palabras)", "", null,
+              "Los kits no variaron con el diagnóstico.");
+        const sp = el("button","linkish","¿El porqué es distinto en cada sector? Sepárenlo →");
+        sp.onclick=()=>{ c.sep=true; save("mesa",M); agendarSubidaCartas(); mCards(); };
         body.appendChild(sp);
       }
 
@@ -1053,7 +1092,7 @@ function sincronizarFac(){
       Object.entries(paq||{}).forEach(([i,c])=>{
         if(!c || (!c.cW && !c.cP)) return;
         F.cartas.push({terr:t, i:+i, cW:c.cW||"", cP:c.cP||"", razon:c.razon||"",
-                       razon2:c.razon2||"", fuente:c.fuente||"", nodeacuerdo:!!c.nd});
+                       razon2:c.razon2||"", sep:!!c.sep, fuente:c.fuente||"", nodeacuerdo:!!c.nd});
       });
     });
     save("fac",F); renderFac();
@@ -1124,9 +1163,14 @@ function renderFac(){
           "<span class='small'>Prot./ICLA/Educ.</span>"+(c.cP?pill(c.cP):"—")+
           (c.nodeacuerdo?"<span class='small' style='color:var(--crimson);font-weight:700'>sin acuerdo</span>":"")+
         "</div>"+
-        "<div style='margin-top:4px'>"+esc(c.razon)+
-          (c.fuente?" <span class='small'>· "+esc(FLBL[c.fuente]||c.fuente)+"</span>":"")+"</div>"+
-        (c.razon2?"<div style='margin-top:4px;padding-left:10px;border-left:3px solid var(--orange);font-size:13.5px'><b style=\'color:#A63C00\'>Se separan:</b> "+esc(c.razon2)+"</div>":"")+
+        (c.razon2
+          ? "<div style='margin-top:5px;padding-left:10px;border-left:3px solid "+SCOL[0]+";font-size:13.5px'>"+
+              "<b style='color:"+SCOL[0]+"'>WASH/Aloj.:</b> "+esc(c.razon)+"</div>"+
+            "<div style='margin-top:4px;padding-left:10px;border-left:3px solid "+SCOL[1]+";font-size:13.5px'>"+
+              "<b style='color:"+SCOL[1]+"'>Prot./ICLA/Educ.:</b> "+esc(c.razon2)+"</div>"+
+            (c.fuente?"<div class='small' style='margin-top:4px'>"+esc(FLBL[c.fuente]||c.fuente)+"</div>":"")
+          : "<div style='margin-top:4px'>"+esc(c.razon)+
+              (c.fuente?" <span class='small'>· "+esc(FLBL[c.fuente]||c.fuente)+"</span>":"")+"</div>")+
         "</div>"));
     });
     cv.appendChild(d);
@@ -1211,10 +1255,25 @@ $$(".tab").forEach(t=>t.onclick=()=>{
 
 /* arranque */
 show("vHome");
-if(!haySync){ document.querySelectorAll(".neti").forEach(n=>n.classList.add("oculto")); }
+if(!haySync){ document.querySelectorAll(".neti").forEach(n=>n.classList.add("oculto"));
+  const mv=$("#mVMan"); if(mv){ mv.open=true; const sm=mv.querySelector("summary"); if(sm) sm.remove(); }
+}
 else {
   marcarRed(false);
   const n=$("#fNota"); if(n) n.textContent = "Todo llega solo a esta pantalla. El recuadro de arriba queda por si alguien se queda sin conexión y hay que meter su código a mano.";
+  const mv=$("#mVMan"); if(mv) mv.open=false;
+  const txt = {
+    hHero: "Antes de abrir nuestra lectura queremos la de ustedes. Primero cada quien valora su propio territorio separando dos bloques sectoriales; después las mesas escriben por qué. Todo viaja solo entre los tres pasos: nadie copia ni pega nada.",
+    hRol1: "Mi territorio, doce casillas, siete minutos. Al terminar presiono Enviar y le llega a mi mesa.",
+    hRol2: "Los tableros de mi mesa llegan solos. Escribimos seis cartas: un color por sector, la razón y de dónde lo sabemos.",
+    hRol3: "Para quien facilita. El mapa se arma en vivo con lo que van enviando, y de ahí salen las casillas calientes y el sobre.",
+    pE1t: "Enviado. Su tablero ya está con su mesa",
+    pE1s: "No lleva su nombre: solo el territorio y los doce colores. El código de abajo es el respaldo, por si la conexión falla.",
+    pPie: "Puede corregir y volver a enviar: vale el último. No tiene que hacer nada más.",
+    mVTit: "Los tableros de esta mesa",
+    mVLead: "Van apareciendo solos, apenas cada quien presiona Enviar. Cuando estén todos, empiecen las cartas: van a ver, casilla por casilla, qué puso cada quien antes de acordar el color."
+  };
+  for(const k in txt){ const e=$("#"+k); if(e) e.textContent = txt[k]; }
   bajar("/meta").then(()=>{});
 }
 </script>
