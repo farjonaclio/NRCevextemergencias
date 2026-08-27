@@ -20,9 +20,10 @@
   /* semánticos: separados del acento de marca */
   --v:#4E8C3F; --vb:#E7F1DC; --a:#B57A08; --ab:#FBEEd0;
   --r:#C0392B; --rb:#F8DED9; --g:#6B7A8A; --gb:#E6EAEF;
-  /* rampa de la escala 1–5: intensidad, no semáforo */
-  --e1:#EDF2F5; --e2:#CFDFE8; --e3:#A6C3D3; --e4:#5F92AC; --e5:#2C6382;
-  --eb:#8FB0C2; --et1:#26485C;
+  /* escala 1–5: un color propio por nota, de bajo a alto */
+  --e1:#F8DED9; --t1:#B0332A; --e2:#FAE3D2; --t2:#A85A15;
+  --e3:#FBEED0; --t3:#8F6206; --e4:#E9F2DE; --t4:#5C8A3C;
+  --e5:#D8EACE; --t5:#3B6F30;
   --sans:"IBM Plex Sans","Segoe UI",-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;
   --disp:"Jost","Century Gothic","Futura","Segoe UI",Helvetica,Arial,sans-serif;
   --radius:10px;
@@ -110,15 +111,24 @@ header.top .inner{max-width:1180px;margin:0 auto;padding:11px 16px;display:flex;
 .opt{border:1.5px solid var(--line);background:#fff;border-radius:9px;padding:11px 4px;font-family:var(--disp);font-weight:700;font-size:16px;cursor:pointer;color:var(--ink);text-align:center;line-height:1.1}
 .opt small{display:block;font-size:9.5px;font-weight:700;letter-spacing:.03em;margin-top:3px;color:var(--mut);text-transform:uppercase}
 .opt[aria-pressed="true"] small{color:inherit;opacity:.85}
-.opt[data-v="1"][aria-pressed="true"]{background:var(--e1);border-color:var(--eb);color:var(--et1)}
-.opt[data-v="2"][aria-pressed="true"]{background:var(--e2);border-color:var(--eb);color:var(--et1)}
-.opt[data-v="3"][aria-pressed="true"]{background:var(--e3);border-color:var(--eb);color:var(--et1)}
-.opt[data-v="4"][aria-pressed="true"]{background:var(--e4);border-color:var(--eb);color:#fff}
-.opt[data-v="5"][aria-pressed="true"]{background:var(--e5);border-color:var(--e5);color:#fff}
+/* sin marcar, cada botón ya insinúa su color en una franja superior */
+.opts .opt[data-v="1"]{box-shadow:inset 0 5px 0 var(--t1)}
+.opts .opt[data-v="2"]{box-shadow:inset 0 5px 0 var(--t2)}
+.opts .opt[data-v="3"]{box-shadow:inset 0 5px 0 var(--t3)}
+.opts .opt[data-v="4"]{box-shadow:inset 0 5px 0 var(--t4)}
+.opts .opt[data-v="5"]{box-shadow:inset 0 5px 0 var(--t5)}
+.opts .opt[data-v="1"],.opts .opt[data-v="2"],.opts .opt[data-v="3"],
+.opts .opt[data-v="4"],.opts .opt[data-v="5"]{padding-top:14px}
+.opt[data-v="1"][aria-pressed="true"]{background:var(--e1);border-color:var(--t1);color:var(--t1);box-shadow:none}
+.opt[data-v="2"][aria-pressed="true"]{background:var(--e2);border-color:var(--t2);color:var(--t2);box-shadow:none}
+.opt[data-v="3"][aria-pressed="true"]{background:var(--e3);border-color:var(--t3);color:var(--t3);box-shadow:none}
+.opt[data-v="4"][aria-pressed="true"]{background:var(--e4);border-color:var(--t4);color:var(--t4);box-shadow:none}
+.opt[data-v="5"][aria-pressed="true"]{background:var(--e5);border-color:var(--t5);color:var(--t5);box-shadow:none}
 .opt[data-v="G"][aria-pressed="true"]{background:var(--gb);border-color:var(--g);color:var(--g)}
 .opt[data-v="X"][aria-pressed="true"]{background:var(--gb);border-color:var(--g);color:var(--g);border-style:dashed}
 /* segunda fila: lo que está fuera de la escala */
-.opts.fuera{grid-template-columns:repeat(2,1fr);margin-top:7px}
+.fueralbl{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin:11px 0 4px}
+.opts.fuera{grid-template-columns:repeat(2,1fr);margin-top:0}
 .opts.fuera .opt{min-height:auto;padding:8px 4px;font-size:13px;font-family:var(--sans);font-weight:700}
 .opts.fuera .opt small{margin-top:1px}
 
@@ -142,11 +152,11 @@ td.k{background:var(--lgt);font-weight:600;white-space:nowrap}
 td{font-variant-numeric:tabular-nums}
 .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:var(--radius)}
 .pill{display:inline-block;min-width:30px;text-align:center;border-radius:6px;padding:3px 7px;font-weight:800;font-size:12.5px;border:1px solid transparent}
-.p1{background:var(--e1);color:var(--et1);border-color:var(--eb)}
-.p2{background:var(--e2);color:var(--et1);border-color:var(--eb)}
-.p3{background:var(--e3);color:var(--et1);border-color:var(--eb)}
-.p4{background:var(--e4);color:#fff;border-color:var(--e4)}
-.p5{background:var(--e5);color:#fff;border-color:var(--e5)}
+.p1{background:var(--e1);color:var(--t1);border-color:var(--t1)}
+.p2{background:var(--e2);color:var(--t2);border-color:var(--t2)}
+.p3{background:var(--e3);color:var(--t3);border-color:var(--t3)}
+.p4{background:var(--e4);color:var(--t4);border-color:var(--t4)}
+.p5{background:var(--e5);color:var(--t5);border-color:var(--t5)}
 .pG{background:var(--gb);color:var(--g);border-color:var(--g)}
 .pX{background:var(--gb);color:var(--g);border-color:var(--g);border-style:dashed}
 .pSD{background:var(--gb);color:var(--g);border-color:var(--g)}
@@ -787,6 +797,7 @@ function goStep(){
       if(P.vals[i*2]!=="" && P.vals[i*2+1]!=="" && i<5) setTimeout(()=>{ P.step=i+1; goStep(); }, 220);
     };
     const fila = (lista, cls)=>{
+      if(cls==="fuera") d.appendChild(el("div","fueralbl","Fuera de la escala"));
       const o=el("div","opts"+(cls?" "+cls:""));
       lista.forEach(([v,lbl])=>{
         const b=el("button","opt",VLBL[v]+"<small>"+esc(lbl)+"</small>");
@@ -1005,6 +1016,7 @@ function mCards(){
           row.appendChild(rp);
         }
         const ponerFila = (lista, cls)=>{
+          if(cls==="fuera") row.appendChild(el("div","fueralbl","Fuera de la escala"));
           const o = el("div","opts"+(cls?" "+cls:""));
           if(cls==="fuera") o.style.gridTemplateColumns="1fr";
           lista.forEach(([v,lbl])=>{
