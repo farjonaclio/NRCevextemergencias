@@ -111,6 +111,10 @@ header.top .inner{max-width:1180px;margin:0 auto;padding:11px 16px;display:flex;
 .opts{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
 .opt{border:1.5px solid #C9D3DC;background:#EFF3F6;border-radius:9px;padding:11px 4px;font-family:var(--disp);font-weight:700;font-size:16px;cursor:pointer;color:var(--ink);text-align:center;line-height:1.1;transition:background .12s,border-color .12s}
 .opt:hover{background:#E3EAF0;border-color:#A9B8C6}
+.opt .emo{display:block;font-size:24px;line-height:1.05;font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif}
+.opts.fuera .opt .emo{font-size:19px}
+.pemo{font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;font-size:12px;margin-right:3px}
+.pill:has(.pemo){padding-left:6px}
 .opt small{display:block;font-size:9.5px;font-weight:700;letter-spacing:.03em;margin-top:3px;color:var(--mut);text-transform:uppercase}
 .opt[aria-pressed="true"] small{color:inherit;opacity:.85}
 /* sin marcar, cada botón ya insinúa su color en una franja superior */
@@ -720,6 +724,10 @@ const ESC  = [["1","Bajo"],["2","Medio bajo"],["3","Medio"],["4","Medio alto"],[
 const FUERA= [["G","No me consta"],["X","No operó aquí"]];
 const VALS = ESC.concat(FUERA);
 const VLBL = {"1":"1","2":"2","3":"3","4":"4","5":"5",G:"G",X:"NA"};
+/* La cara es lo que se ve; el número es lo que se calcula. Cada botón muestra
+   la cara y la palabra, y por debajo sigue viajando el 1–5 de siempre: el
+   promedio, la regla, el CSV y el Excel no cambian. */
+const VEMO = {"1":"😞","2":"🙁","3":"😐","4":"🙂","5":"😄",G:"🤔",X:"🚫"};
 const VNOM = Object.fromEntries(VALS);
 const PESO = {"1":1,"2":2,"3":3,"4":4,"5":5,G:0,X:0};
 /* De dónde sabe la mesa lo que afirma, de lo más directo a lo más frágil.
@@ -761,8 +769,10 @@ async function copy(txt){
 function pill(v){
   if(v==null||v===""||v==="—") return '<span class="pnone">—</span>';
   const map={"1":"p1","2":"p2","3":"p3","4":"p4","5":"p5",G:"pG",X:"pX",SD:"pSD"};
-  const lbl={G:"G",X:"NA",SD:"SD"}[v]||v;
-  return '<span class="pill '+(map[v]||"pG")+'">'+lbl+'</span>';
+  const lbl={G:"",X:"",SD:"SD"}[v];
+  const cara = VEMO[v] ? '<span class="pemo">'+VEMO[v]+'</span>' : "";
+  const nom = {G:"No me consta",X:"No operó aquí",SD:"Sin dato"}[v] || ("Nota "+v+" · "+(VNOM[v]||""));
+  return '<span class="pill '+(map[v]||"pG")+'" title="'+nom+'">'+cara+(lbl!==undefined?lbl:v)+'</span>';
 }
 const CELLBG = {"1":"var(--e1)","2":"var(--e2)","3":"var(--e3)","4":"var(--e4)","5":"var(--e5)",
                 G:"var(--gb)",X:"var(--gb)",SD:"var(--gb)"};
@@ -1052,7 +1062,8 @@ function goStep(){
       if(cls==="fuera") d.appendChild(el("div","fueralbl","Fuera de la escala"));
       const o=el("div","opts"+(cls?" "+cls:""));
       lista.forEach(([v,lbl])=>{
-        const b=el("button","opt",VLBL[v]+"<small>"+esc(lbl)+"</small>");
+        const b=el("button","opt",'<span class="emo">'+VEMO[v]+'</span><small>'+esc(lbl)+'</small>');
+        b.title = (VLBL[v]==="NA"?"No operó aquí":(VLBL[v]==="G"?"No me consta":"Nota "+VLBL[v]))+" · "+lbl;
         b.dataset.v=v;
         b.setAttribute("aria-pressed", P.vals[i*2+si]===v);
         b.onclick=marcar(v);
@@ -1341,7 +1352,8 @@ function mCards(){
           [["1","p1"],["2","p2"],["3","p3"],["4","p4"],["5","p5"],["G","pG"],["X","pX"]].forEach(([k,cls])=>{
             if(!cuenta[k]) return; algo=true;
             rp.appendChild(el("span","rp "+cls,
-              '<b>'+(k==="X"?"NA":k)+'</b><i>'+cuenta[k]+(cuenta[k]===1?" persona":" personas")+'</i>'));
+              '<b><span class="pemo">'+VEMO[k]+'</span>'+(k==="X"?"":(k==="G"?"":k))+'</b><i>'+
+              cuenta[k]+(cuenta[k]===1?" persona":" personas")+'</i>'));
           });
           if(!algo) rp.appendChild(el("span",null,"todavía nadie"));
           let sum=0, nn=0;
@@ -1354,7 +1366,8 @@ function mCards(){
           if(cls==="fuera") row.appendChild(el("div","fueralbl","Fuera de la escala"));
           const o = el("div","opts"+(cls?" "+cls:""));
           lista.forEach(([v,lbl])=>{
-            const bt=el("button","opt",(v==="X"?"NA":v)+"<small>"+esc(lbl)+"</small>");
+            const bt=el("button","opt",'<span class="emo">'+VEMO[v]+'</span><small>'+esc(lbl)+'</small>');
+            bt.title = (v==="X"?"No operó aquí":(v==="G"?"No nos consta":"Nota "+v))+" · "+lbl;
             bt.dataset.v=v; bt.setAttribute("aria-pressed", c[key]===v);
             bt.onclick=()=>{ c[key] = c[key]===v?"":v; save("mesa",M); agendarSubidaCartas(); mCards(); };
             o.appendChild(bt);
