@@ -1,4 +1,4 @@
-# El Tablero de la Respuesta
+# Lectura del Equipo
 
 Herramienta web de la actividad de análisis del **Taller de Resultados Preliminares** ·
 Evaluación externa de la respuesta en emergencia · Proyecto COFM2308 (NRC Colombia).
@@ -23,8 +23,11 @@ Se llega por REST puro (`fetch` para escribir, `EventSource` para escuchar en vi
 SDK, sin dependencias y sin build. Si la base no responde, la app marca «sin conexión» y
 las pestañas de códigos vuelven a aparecer.
 
-Para usar otra sala —una prueba, o un segundo taller— basta agregar el parámetro:
-`…/NRCevextemergencias/?sala=prueba-2026`. Las salas no se ven entre sí.
+Para usar otra sala —un ensayo, o un segundo taller— basta agregar el parámetro:
+`…/NRCevextemergencias/?sala=prueba-2026`. Las salas no se ven entre sí y no hay que
+crearlas en ninguna parte: quedan hechas al entrar. Desde la interfaz se hace con
+**Cambiar de sala** (al pie de la página y en Consolidar), que valida el nombre, sugiere
+uno de ensayo y copia el enlace con la sala incluida.
 
 > Los datos de la sala quedan en la base hasta que se borren a mano desde la consola de
 > Firebase. No hay nombres ni datos personales: los códigos llevan territorio y doce
@@ -38,7 +41,7 @@ Para usar otra sala —una prueba, o un segundo taller— basta agregar el pará
 cd tablero-app
 git init
 git add .
-git commit -m "Tablero de la Respuesta · actividad COFM2308"
+git commit -m "Lectura del Equipo · actividad COFM2308"
 git branch -M main
 git remote add origin https://github.com/<usuario>/<repositorio>.git
 git push -u origin main

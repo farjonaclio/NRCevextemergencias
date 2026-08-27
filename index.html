@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>El Tablero de la Respuesta</title>
+<title>Lectura del Equipo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jost:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
@@ -93,7 +93,7 @@ header.top .inner{max-width:1180px;margin:0 auto;padding:11px 16px;display:flex;
 .notice.teal b{color:var(--teal)}
 
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 4px}
-.chip{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:9px 16px;font-family:var(--disp);font-size:14.5px;font-weight:600;cursor:pointer;color:var(--ink)}
+.chip{border:1.5px solid #C9D3DC;background:#EFF3F6;border-radius:999px;padding:9px 16px;font-family:var(--disp);font-size:14.5px;font-weight:600;cursor:pointer;color:var(--ink)}
 .chip[aria-pressed="true"]{border-color:var(--tc,var(--teal));background:var(--tc,var(--teal));color:#fff}
 .chip .cdot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--tc,var(--teal));margin-right:7px;vertical-align:0}
 .chip[aria-pressed="true"] .cdot{background:#fff}
@@ -109,7 +109,8 @@ header.top .inner{max-width:1180px;margin:0 auto;padding:11px 16px;display:flex;
 .sector h4{margin:0 0 2px;font-family:var(--disp);font-size:16px;font-weight:700}
 .sector .sub{font-size:12px;color:var(--mut);margin:0 0 10px}
 .opts{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
-.opt{border:1.5px solid var(--line);background:#fff;border-radius:9px;padding:11px 4px;font-family:var(--disp);font-weight:700;font-size:16px;cursor:pointer;color:var(--ink);text-align:center;line-height:1.1}
+.opt{border:1.5px solid #C9D3DC;background:#EFF3F6;border-radius:9px;padding:11px 4px;font-family:var(--disp);font-weight:700;font-size:16px;cursor:pointer;color:var(--ink);text-align:center;line-height:1.1;transition:background .12s,border-color .12s}
+.opt:hover{background:#E3EAF0;border-color:#A9B8C6}
 .opt small{display:block;font-size:9.5px;font-weight:700;letter-spacing:.03em;margin-top:3px;color:var(--mut);text-transform:uppercase}
 .opt[aria-pressed="true"] small{color:inherit;opacity:.85}
 /* sin marcar, cada botón ya insinúa su color en una franja superior */
@@ -295,10 +296,13 @@ label.fld em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:
 #pNotaBox>summary{cursor:pointer;list-style:none;font-size:13.5px;color:var(--teal);font-weight:700;padding:4px 0}
 #pNotaBox>summary::-webkit-details-marker{display:none}
 #pNotaBox>summary:before{content:"✎ ";font-weight:700}
+.critq{font-family:var(--disp);font-weight:600;font-size:18px;line-height:1.35;color:var(--teal);
+  border-left:4px solid var(--teal);padding:2px 0 2px 14px;margin:8px 0 2px;max-width:60ch}
+@media (max-width:560px){ .critq{font-size:16px} }
 .ayuda{border:1px solid var(--line);border-radius:10px;background:var(--lgt);margin:10px 0 4px;padding:0 13px}
 .ayuda>summary{cursor:pointer;list-style:none;font-size:13px;font-weight:700;color:var(--teal);padding:9px 0}
 .ayuda>summary::-webkit-details-marker{display:none}
-.ayuda>summary:before{content:"? ";font-weight:800}
+.ayuda>summary:before{content:"› ";font-weight:800}
 .ayuda[open]>summary{color:var(--mut);border-bottom:1px solid var(--line)}
 .ayuda p{margin:9px 0;font-size:13.5px;line-height:1.5;color:var(--gray)}
 .ayuda p:last-child{padding-bottom:10px}
@@ -333,10 +337,23 @@ label.fld em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:
 .eestado.ok{background:#E7F1DC;color:#3E7233}
 .eestado.ok:before{content:"✓  "}
 .eestado.mal{background:var(--ab);color:#8a6100}
-.vchip{display:inline-flex;align-items:center;gap:8px;background:var(--lgt);border:1px solid var(--line);border-radius:999px;padding:6px 8px 6px 12px;margin:6px 6px 0 0;font-size:13.5px}
-.vchip b{font-family:ui-monospace,Menlo,monospace;font-weight:600;letter-spacing:.05em}
-.vchip button{border:0;background:none;color:var(--mut);font-size:17px;line-height:1;cursor:pointer;padding:0 4px}
-.vchip button:hover{color:var(--r)}
+.vchip{display:inline-flex;align-items:center;gap:8px;background:#EFF3F6;border:1.5px solid #C9D3DC;border-radius:999px;padding:6px 12px;margin:6px 6px 0 0;font-size:13.5px}
+.vchip b{font-family:var(--disp);font-weight:700;color:var(--teal)}
+.vchip .amano{font-size:11px;color:var(--mut)}
+.vchip button{border:0;background:none;color:var(--mut);font-size:17px;line-height:1;cursor:pointer;padding:0 0 0 2px}
+.vchip button:hover{color:var(--crimson)}
+/* ── panel de la sala compartida ── */
+#salaOv{position:fixed;inset:0;z-index:210;background:rgba(24,31,44,.55);display:flex;align-items:center;justify-content:center;padding:18px}
+.salabox{background:#fff;border-radius:14px;max-width:520px;width:100%;padding:20px 22px 18px;box-shadow:0 18px 60px rgba(0,0,0,.3);max-height:92vh;overflow:auto}
+.salabox h2{font-family:var(--disp);font-size:21px;margin:0 0 4px;color:var(--navy)}
+.salabox p{font-size:13.5px;color:var(--gray);margin:8px 0}
+.salaahora{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--lgt);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:10px 0 4px}
+.salaahora code{font-family:ui-monospace,Menlo,monospace;font-size:14px;font-weight:600;color:var(--navy)}
+.salabox input[type=text]{width:100%;font:inherit;font-family:ui-monospace,Menlo,monospace;font-size:15px;padding:11px 12px;border:1.5px solid #C9D3DC;border-radius:9px;background:#fff}
+.salabox input[type=text]:focus{outline:0;border-color:var(--teal)}
+.salaaviso{font-size:12.5px;margin:6px 0 0;min-height:16px}
+.salaaviso.mal{color:var(--crimson)}
+.salaaviso.ok{color:#3E7233}
 .reparto{display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin:0 0 9px;font-size:12.5px;color:var(--mut)}
 .reparto .rlbl{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--mut);width:100%}
 .reparto .rp{display:inline-flex;align-items:baseline;gap:5px;border-radius:7px;padding:3px 9px;border:1px solid transparent}
@@ -402,7 +419,7 @@ label.fld em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:
 <header class="top">
   <div class="inner">
     <img class="logo lclio" src="data:image/png;base64,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" alt="CliO Consulting">
-    <div class="brand">El Tablero de la Respuesta<span>COFM2308 · NRC Colombia <em>· Evaluación externa de la respuesta en emergencia</em></span></div>
+    <div class="brand">Lectura del Equipo<span>COFM2308 · NRC Colombia <em>· Evaluación externa de la respuesta en emergencia</em></span></div>
     <div class="hspacer"></div>
     <span class="neti off">sin conexión</span>
     <button class="linkbtn" id="btnHome">Inicio</button>
@@ -441,22 +458,6 @@ label.fld em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:
     </button>
   </div>
 
-  <div class="notice teal">
-    <b>Nadie gana y no hay puntaje.</b> Ninguna de estas casillas evalúa a las personas: evalúan una respuesta hecha en emergencia, con lo que había y en el tiempo que había.
-  </div>
-
-  <details class="howto">
-    <summary>Cómo se corre la actividad, minuto a minuto</summary>
-    <div class="tl">
-      <div class="tlrow" style="--c:var(--steel)"><b>0–5</b><div><strong>Encuadre</strong><span>Se comparte el enlace por el chat. Se anuncian las mesas y sus territorios. Cada mesa nombra portavoz y escriba.</span></div></div>
-      <div class="tlrow" style="--c:var(--steel)"><b>5–12</b><div><strong>Cada quien, solo</strong><span id="tl1">Todos entran en «Voy a votar», eligen su territorio y puntúan doce casillas de 1 a 5. Al terminar le entregan su código a su mesa.</span></div></div>
-      <div class="tlrow" style="--c:var(--crimson)"><b>12–28</b><div><strong>Mesas</strong><span id="tl2">Un dispositivo por mesa recoge los códigos de sus integrantes y escribe seis cartas. Al terminar, «Copiar mis cartas» y mandarlas a quien facilita.</span></div></div>
-      <div class="tlrow" style="--c:var(--crimson)"><b>28–40</b><div><strong>Puesta en común</strong><span id="tl3">Quien facilita pega los tres bloques en «Consolidar» y proyecta el mapa. Cuatro minutos por mesa.</span></div></div>
-      <div class="tlrow" style="--c:var(--orange)"><b>40–50</b><div><strong>Se abre el sobre</strong><span>Botón «Abrir el sobre». La pestaña «Dónde conversar» ya trae las candidatas ordenadas. Se discuten dos.</span></div></div>
-      <div class="tlrow" style="--c:#6E9E4A"><b>50–60</b><div><strong>Ficha única y cierre</strong><span>Una recomendación por persona, compromisos de dato y descarga del CSV para el informe.</span></div></div>
-    </div>
-    <p class="small" style="margin:12px 0 0">Todo funciona sin conexión una vez abierta la página, y lo que cada quien escribe queda guardado en su propio navegador. Si alguien se sale por error, vuelve a entrar y sigue donde iba.</p>
-  </details>
 </section>
 
 <!-- ══════════════════════════════ PARTICIPANTE ══════════════════════════════ -->
@@ -476,7 +477,7 @@ label.fld em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:
     <div class="stepbar" id="pBar"></div>
     <p class="small" id="pProg"></p>
     <h2 id="pCrit" style="margin-top:4px"></h2>
-    <p class="lead" id="pCritQ" style="font-size:14px"></p>
+    <p class="critq" id="pCritQ"></p>
     <details class="ayuda" id="pAyuda"><summary>¿Qué quiere decir este criterio?</summary>
       <p id="pAyudaDef"></p><p id="pAyudaQ"></p></details>
     <div id="pSectors"></div>
@@ -616,9 +617,7 @@ label.fld em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:
       mientras se dice: eso es lo que se lleva al informe.</p>
     <div class="nav">
       <button class="btn mag" id="fProy">Proyectar el plenario</button>
-      <button class="btn ghost" id="fPub">Publicar como página</button>
       <div class="spacer"></div>
-      <span class="small" id="fPubN"></span>
     </div>
     <div id="fPlen"></div>
   </div>
@@ -1212,11 +1211,24 @@ function mVotosList(){
       b2.onclick=irACartas; go.appendChild(b2); box.appendChild(go);
     }
   } else {
+    /* Un chip por tablero recibido, numerado. No decimos de quién es
+       ninguno —el voto es anónimo—: solo cuántos llegaron. La × solo
+       aparece en los que se metieron a mano, porque los que llegan por
+       la sala se vuelven a cargar solos. */
+    const man = M.votos.filter(v=>v.manual).length;
+    box.appendChild(el("p","small",
+      "Llegaron "+M.votos.length+" tablero"+(M.votos.length===1?"":"s")+
+      (man ? " ("+man+" metido"+(man===1?"":"s")+" a mano)" : "")+
+      ". Son anónimos: no se sabe cuál es de quién, solo cuántos son y qué pusieron."));
     M.votos.forEach((v,i)=>{
-      const c=el("span","vchip",'<b>'+esc(v.code.slice(0,5))+'…</b>'+(v.manual?'':' <span class="small">auto</span>'));
-      const x=el("button",null,"×"); x.title="Quitar";
-      x.onclick=()=>{ M.votos.splice(i,1); save("mesa",M); mVotosList(); };
-      c.appendChild(x); box.appendChild(c);
+      const c=el("span","vchip",'<b>'+(i+1)+'</b> tablero'+
+        (v.manual?' <span class="amano">a mano</span>':''));
+      if(v.manual){
+        const x=el("button",null,"×"); x.title="Quitar este tablero";
+        x.onclick=()=>{ M.votos.splice(i,1); save("mesa",M); mVotosList(); };
+        c.appendChild(x);
+      }
+      box.appendChild(c);
     });
     const go=el("div","nav");
     const b=el("button","btn teal", M.votos.length+" tablero"+(M.votos.length===1?"":"s")+" · empezar las cartas");
@@ -1249,8 +1261,9 @@ function mCards(){
       {
         const ay = el("details","ayuda");
         ay.innerHTML = "<summary>¿Qué quiere decir "+esc(crit[0])+"?</summary>"+
-          "<p>"+esc(crit[1])+"</p><p>"+esc(crit[2])+"</p>"+
+          "<p>"+esc(crit[2])+"</p>"+
           "<p><b>Si la mesa se traba, pregunten esto:</b> "+esc(crit[3])+"</p>";
+        body.appendChild(el("p","critq",esc(crit[1])));
         body.appendChild(ay);
       }
       /* Notas que dejó la gente de esta mesa en la Ronda 1 para este criterio. */
@@ -1642,7 +1655,7 @@ function contenidoPlenario(rows){
   const num = x => x==null ? "—" : (Math.round(x*10)/10).toString().replace(".",",");
   const hoy = new Date().toLocaleDateString("es-CO", {day:"numeric", month:"long", year:"numeric"});
   const elegidas = rows.filter(r=>F.debate.indexOf(r.crit+"|"+r.terr)>=0);
-  let h = '<header class="pcab"><h1>El Tablero de la Respuesta</h1>'+
+  let h = '<header class="pcab"><h1>Lectura del Equipo</h1>'+
     '<p>COFM2308 · NRC Colombia · Evaluación externa de la respuesta en emergencia</p>'+
     '<p class="meta">Taller de resultados preliminares · '+esc(hoy)+' · sala '+esc(sala)+
     ' · '+F.votes.length+' persona'+(F.votes.length===1?"":"s")+' votaron</p></header>';
@@ -1708,18 +1721,6 @@ function contenidoPlenario(rows){
     h += '</div>';
   });
   return h;
-}
-function paginaPlenario(rows){
-  const css = [...document.querySelectorAll("style")].map(x=>x.textContent).join("\n");
-  return '<!doctype html><html lang="es"><head><meta charset="utf-8">'+
-    '<meta name="viewport" content="width=device-width,initial-scale=1">'+
-    '<title>Plenario · El Tablero de la Respuesta · COFM2308</title>'+
-    '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'+
-    '<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">'+
-    '<style>'+css+'\nbody{padding:28px 22px;max-width:1180px;margin:0 auto;background:#fff}</style></head>'+
-    '<body class="pagpub">'+contenidoPlenario(rows)+
-    '<footer class="pfoot">Actividad de análisis diseñada por CliO Consulting · Documento generado desde El Tablero de la Respuesta.</footer>'+
-    '</body></html>';
 }
 let pararFac = ()=>{};
 function sincronizarFac(){
@@ -1920,18 +1921,67 @@ $("#fReset").onclick = ()=>{
    Es lo que se hace entre un ensayo y el taller de verdad. */
 /* Cambiar de sala sin tocar el enlace a mano. Recarga en la sala nueva;
    lo que cada quien tenía guardado en su navegador se conserva. */
+const enlaceDeSala = s => { const u=new URL(location.href); u.searchParams.set("sala",s); return u.toString(); };
+const limpiarNombre = t => (t||"").toLowerCase().trim().replace(/\s+/g,"-").replace(/[^a-z0-9-]/g,"").slice(0,32);
+function nombreSugerido(){
+  const A="abcdefghijkmnpqrstuvwxyz23456789"; let x="";
+  for(let i=0;i<4;i++) x += A[Math.floor(Math.random()*A.length)];
+  return "ensayo-"+x;
+}
 function cambiarDeSala(){
-  const propuesto = prompt(
-    "Nombre de la sala.\n\nMínimo diez caracteres, solo minúsculas, números y guiones.\n"+
-    "Todos —participantes, mesas y quien facilita— tienen que entrar a la misma.\n\n"+
-    "La del taller es «"+SALA_POR_DEFECTO+"».", sala);
-  if(propuesto===null) return;
-  const limpia = propuesto.toLowerCase().replace(/[^a-z0-9-]/g,"").slice(0,32);
-  if(limpia.length<10){ alert("Ese nombre es muy corto: se necesitan al menos diez caracteres."); return; }
-  if(limpia===sala){ return; }
-  const u = new URL(location.href);
-  u.searchParams.set("sala", limpia);
-  location.href = u.toString();
+  if($("#salaOv")) return;
+  const ov = el("div",null,""); ov.id="salaOv";
+  const bx = el("div","salabox","");
+  bx.innerHTML =
+    '<h2>La sala compartida</h2>'+
+    '<p>Una sala es solo un nombre. Todo lo que se vota y se escribe viaja dentro de ella, '+
+    'y las salas no se ven entre sí. <b>Todos —participantes, mesas y quien facilita— tienen que estar en la misma.</b></p>'+
+    '<div class="salaahora"><span class="small">Ahora está en</span> <code>'+esc(sala)+'</code>'+
+      '<div class="spacer" style="flex:1"></div>'+
+      '<button class="btn ghost sm" id="salaCopiar">Copiar el enlace</button></div>'+
+    '<p style="margin-top:16px"><b>Entrar a otra sala.</b> No hay que crearla en ninguna parte: '+
+    'se escribe un nombre que nadie esté usando y la sala queda hecha al entrar. '+
+    'Sirve para ensayar sin ensuciar la del taller.</p>'+
+    '<input type="text" id="salaIn" value="'+esc(sala)+'" spellcheck="false" autocapitalize="off" '+
+      'placeholder="diez caracteres o más · minúsculas, números y guiones">'+
+    '<p class="salaaviso" id="salaAviso"></p>'+
+    '<div class="nav" style="margin-top:10px">'+
+      '<button class="btn teal sm" id="salaIr">Entrar a esta sala</button>'+
+      '<button class="btn ghost sm" id="salaSug">Sugerir un nombre</button>'+
+      '<button class="linkish" id="salaCerrar" style="margin:0 0 0 6px">Cancelar</button></div>'+
+    (sala!==SALA_POR_DEFECTO
+      ? '<p class="small" style="margin-top:12px">La sala del taller es <code>'+esc(SALA_POR_DEFECTO)+'</code>. '+
+        '<button class="linkish" id="salaVolver" style="margin:0">Volver a ella</button></p>'
+      : '<p class="small" style="margin-top:12px">Esta es la sala del taller.</p>');
+  ov.appendChild(bx); document.body.appendChild(ov);
+  document.body.style.overflow="hidden";
+
+  const inp=$("#salaIn"), av=$("#salaAviso");
+  const cerrar=()=>{ ov.remove(); document.body.style.overflow=""; document.removeEventListener("keydown",esc2); };
+  const esc2=e=>{ if(e.key==="Escape") cerrar(); };
+  document.addEventListener("keydown",esc2);
+  ov.onclick=e=>{ if(e.target===ov) cerrar(); };
+  $("#salaCerrar").onclick=cerrar;
+
+  const revisar=()=>{
+    const l=limpiarNombre(inp.value);
+    if(!l){ av.className="salaaviso mal"; av.textContent="Escriba un nombre."; return null; }
+    if(l.length<10){ av.className="salaaviso mal"; av.textContent="Muy corto: se necesitan al menos diez caracteres. Va «"+l+"»."; return null; }
+    if(l===sala){ av.className="salaaviso"; av.textContent="Es la sala en la que ya está."; return null; }
+    av.className="salaaviso ok"; av.textContent="Va a entrar a «"+l+"».";
+    return l;
+  };
+  inp.oninput=revisar;
+  inp.onkeydown=e=>{ if(e.key==="Enter"){ e.preventDefault(); $("#salaIr").click(); } };
+  $("#salaSug").onclick=()=>{ inp.value=nombreSugerido(); revisar(); inp.focus(); };
+  $("#salaIr").onclick=()=>{ const l=revisar(); if(l) location.href = enlaceDeSala(l); };
+  $("#salaCopiar").onclick=()=>{
+    const t=enlaceDeSala(sala);
+    if(navigator.clipboard) navigator.clipboard.writeText(t).then(()=>toast("Enlace copiado"),()=>prompt("Copie el enlace:",t));
+    else prompt("Copie el enlace:", t);
+  };
+  const vb=$("#salaVolver"); if(vb) vb.onclick=()=>{ location.href = enlaceDeSala(SALA_POR_DEFECTO); };
+  setTimeout(()=>{ inp.focus(); inp.select(); }, 30);
 }
 $("#fCambiar").onclick = cambiarDeSala;
 $("#fProy").onclick = ()=>{
@@ -1942,10 +1992,7 @@ $("#fProy").onclick = ()=>{
 };
 $("#proyCerrar").onclick = ()=>{ $("#proy").classList.add("hide"); document.body.style.overflow=""; };
 document.addEventListener("keydown", e=>{ if(e.key==="Escape" && !$("#proy").classList.contains("hide")) $("#proyCerrar").click(); });
-$("#fPub").onclick = ()=>{
-  saveFile("plenario_COFM2308.html", paginaPlenario(consolidate()));
-  const n=$("#fPubN"); if(n) n.textContent = "Página lista: ábrala en el navegador o mándela por correo.";
-};
+
 $("#fVerMan").onclick = ()=>{ const d=$("#fMan"); d.classList.remove("hide"); d.open=true; d.scrollIntoView({block:"center",behavior:"smooth"}); };
 $("#hCambiar").onclick = cambiarDeSala;
 $("#fVaciar").onclick = async ()=>{
