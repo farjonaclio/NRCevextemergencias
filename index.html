@@ -377,6 +377,24 @@ label.fld em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:
 .otram:first-of-type{border-top:0}
 .otrar{font-size:13.5px;color:var(--gray);margin-top:3px}
 .otraav{margin-top:7px;font-size:12.5px;color:#8a6100;background:var(--ab);border-radius:7px;padding:6px 9px}
+#mExistentes{margin:12px 0 4px}
+.mesaex{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin-top:6px;background:#fff}
+.mesaex.propia{background:var(--lgt);border-style:dashed}
+.mesaex b{font-family:var(--disp);font-size:14px;color:var(--navy)}
+.mesaex .btn{margin-left:auto}
+.plen-res{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:8px 0 12px}
+.plen-res .lbl{font-family:var(--disp);font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mut)}
+.pres{display:inline-flex;align-items:baseline;gap:6px;font-size:12.5px;color:var(--gray);border-left:3px solid var(--sc);padding:2px 0 2px 8px}
+.pres i{font-style:normal;font-weight:700;color:var(--sc);font-size:11.5px}
+.pres b{font-family:var(--disp);font-size:14px;color:var(--navy)}
+tr.resumen td{background:#F4F7FA;border-top:2px solid var(--navy)}
+tr.resumen .k{font-weight:800;color:var(--navy)}
+tr.resumen .tcell{font-weight:700;color:var(--gray);border-left:0}
+td.rescell{text-align:center;white-space:nowrap}
+td.rescell b{font-family:var(--disp);font-size:15px;color:var(--navy);display:block;line-height:1.1}
+td.rescell i{font-style:normal;font-size:10.5px;color:var(--mut)}
+.cober{display:block;margin-top:3px;font-size:11.5px;color:var(--a);font-weight:600}
+.sector .cober{margin:2px 0 8px}
 .mesasbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:2px 0 14px}
 .mesasl{font-family:var(--disp);font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mut)}
 .mesap{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;border-radius:999px;padding:4px 11px;border:1px solid var(--line);background:#fff;color:var(--gray)}
@@ -555,6 +573,7 @@ td.multi>span.mtag:first-child{margin-left:0}
   <div id="mTerr">
     <p class="lead">Seis cartas, una por criterio. En cada una se pinta por separado lo que pasó en WASH y Alojamiento y lo que pasó en Protección: ICLA y Educación.</p>
     <div class="chips" id="mTerrChips"></div>
+    <div id="mExistentes" class="hide"></div>
     <label class="fld" for="mNombre" style="margin-top:14px">¿Cómo se llama esta mesa? <span class="small" style="font-weight:400">— opcional, para reconocerla en la consolidación</span></label>
     <input type="text" id="mNombre" maxlength="28" placeholder="Los del Putumayo, Mesa de la ventana, Equipo 2…"
       style="width:100%;max-width:34ch;font:inherit;font-size:15px;padding:10px 12px;border:1.5px solid #C9D3DC;border-radius:9px;background:#fff">
@@ -741,8 +760,12 @@ const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 const el = (t,c,h) => { const n=document.createElement(t); if(c) n.className=c; if(h!=null) n.innerHTML=h; return n; };
 function toast(msg){ const t=el("div","toast",msg); document.body.appendChild(t); setTimeout(()=>t.remove(),2100); }
-function save(k,v){ try{ localStorage.setItem("tablero."+k, JSON.stringify(v)); }catch(e){} }
-function load(k,d){ try{ const s=localStorage.getItem("tablero."+k); return s?JSON.parse(s):d; }catch(e){ return d; } }
+/* Lo guardado se separa por sala: entrar a otra sala no arrastra los votos,
+   las cartas ni las casillas elegidas de la anterior. Era la causa de que
+   aparecieran tarjetas en el plenario sin que nadie hubiera votado. */
+const claveLocal = k => "tablero." + (typeof sala==="string" ? sala+"." : "") + k;
+function save(k,v){ try{ localStorage.setItem(claveLocal(k), JSON.stringify(v)); }catch(e){} }
+function load(k,d){ try{ const s=localStorage.getItem(claveLocal(k)); return s?JSON.parse(s):d; }catch(e){ return d; } }
 async function copy(txt){
   try{ await navigator.clipboard.writeText(txt); toast("Copiado"); }
   catch(e){
@@ -1034,6 +1057,8 @@ function goStep(){
     d.style.borderTopColor = si===0 ? "var(--steel)" : "#6E9E4A";
     d.appendChild(el("h4",null,'<span class="sdot" style="background:'+(si===0?"var(--steel)":"#6E9E4A")+'"></span>'+esc(s[0])));
     d.appendChild(el("p","sub",esc(s[1])));
+    const cb = cobTxt(P.terr, si);
+    if(cb) d.appendChild(el("p","cober",esc(cb)));
     /* Marcar no cambia de pantalla. Antes saltaba solo al completar los dos
        sectores, y eso atropellaba a quien iba a escribir una nota: el criterio
        se cierra cuando la persona presiona «Siguiente», no antes. */
@@ -1129,6 +1154,25 @@ $("#pCode").onclick = async ()=>{
 $("#pEdit").onclick = ()=>review();
 
 /* ═══════════════════════════ mesa ═══════════════════════════ */
+/* Qué operó realmente en cada territorio, según la lámina 10 del taller
+   («Cobertura territorial · los sectores abordados en el territorio»).
+   Importa porque los dos bloques no cubren lo mismo en los tres territorios:
+   en Putumayo el primer bloque es solo WASH y en Cauca es solo Alojamiento.
+   Sin este aviso, comparar esa columna entre territorios compara cosas
+   distintas. Fuente: presentación del taller, lámina 10. */
+const COB = {
+  "Putumayo":            [["WASH", "Alojamiento no operó aquí"],
+                          ["Protección comunitaria, ICLA y Educación", ""]],
+  "Norte de Santander":  [["WASH y Alojamiento", ""],
+                          ["Protección comunitaria, ICLA y Educación", ""]],
+  "Cauca":               [["Alojamiento", "WASH no operó aquí"],
+                          ["Protección comunitaria y Educación", "sin ICLA"]]
+};
+const cobTxt = (terr, si) => {
+  const c = COB[terr] && COB[terr][si];
+  if(!c) return "";
+  return "Aquí: " + c[0] + (c[1] ? " · " + c[1] : "");
+};
 const SCOL = ["var(--steel)", "#6E9E4A"];
 const MVALS = ESC.concat([["G","No nos consta"],["X","No operó aquí"]]);
 
@@ -1149,6 +1193,7 @@ function renderMesa(){
     };
     wrap.appendChild(b);
   });
+  listarMesasDeLaSala();
   const nb=$("#mNombre");
   if(nb){
     nb.value = M.nombre || "";
@@ -1197,6 +1242,61 @@ function avisarOtrasMesas(){
     av.innerHTML = "Hay <b>"+otras.length+" mesa"+(otras.length===1?"":"s")+" más</b> trabajando "+
       esc(M.terr)+". No hay problema: cada mesa guarda sus propias cartas y quien facilita las ve todas, "+
       "una al lado de la otra. Escriban las suyas sin mirar las de la otra mesa.";
+  });
+}
+/* Las mesas que ya existen en la sala para ese territorio. Sirve para dos
+   cosas: saber que hay otra trabajando lo mismo, y retomar la propia desde
+   otro equipo si el primero se quedó sin batería. */
+async function listarMesasDeLaSala(){
+  const box=$("#mExistentes"); if(!box) return;
+  box.classList.add("hide"); box.innerHTML="";
+  if(!haySync || !M.terr) return;
+  const d = await bajar("/cartas");
+  if(d===undefined || !d) return;
+  const pref = TCODE[M.terr];
+  const lista = Object.entries(d)
+    .filter(([tc,paq])=>tc.slice(0,1)===pref && paq && typeof paq==="object")
+    .map(([tc,paq])=>({
+      tc, mid: tc.slice(1),
+      nombre: typeof paq.n==="string" ? paq.n : "",
+      n: Object.entries(paq).filter(([i,c])=>i!=="n" && c && typeof c==="object" && (c.cW||c.cP)).length
+    }))
+    .filter(x=>x.n>0);
+  if(!lista.length) return;
+  box.classList.remove("hide");
+  const h = el("p","small","En "+esc(M.terr)+" ya hay "+lista.length+" mesa"+(lista.length===1?"":"s")+
+    " trabajando. Pueden abrir otra —no hay problema, cada una guarda lo suyo— o retomar una de estas desde este equipo:");
+  box.appendChild(h);
+  lista.forEach((x,j)=>{
+    const propia = x.mid===M.mid;
+    const c = el("div","mesaex"+(propia?" propia":""));
+    c.innerHTML = '<b>'+esc(x.nombre || ("Mesa "+(j+1)))+'</b>'+
+      '<span class="small">'+x.n+' de 6 cartas'+(propia?" · es la de este equipo":"")+'</span>';
+    if(!propia){
+      const b=el("button","btn ghost sm","Retomar");
+      b.onclick=async ()=>{
+        if(!confirm("Va a continuar «"+(x.nombre||"esa mesa")+"» desde este equipo.\n\n"+
+                    "Lo que tuviera escrito acá se reemplaza. Si el otro equipo sigue abierto, "+
+                    "los dos van a escribir sobre la misma carta.\n\n¿Seguir?")) return;
+        const paq = await bajar("/cartas/"+x.tc);
+        if(paq===undefined || !paq){ toast("No se pudo leer esa mesa"); return; }
+        M.mid = x.mid; M.nombre = typeof paq.n==="string" ? paq.n : "";
+        M.cartas = Array(6).fill(null).map(NUEVA_CARTA);
+        Object.entries(paq).forEach(([i,cc])=>{
+          if(i==="n" || !cc || typeof cc!=="object") return;
+          const k = +i; if(!(k>=0 && k<6)) return;
+          M.cartas[k] = {cW:cc.cW||"", cP:cc.cP||"", razon:cc.razon||"", razon2:cc.razon2||"",
+                         sep:!!cc.sep, fuente:cc.fuente||"", fuente2:cc.fuente2||"", nodeacuerdo:!!cc.nd};
+        });
+        M.terrCartas = M.terr; M.open = 0; save("mesa",M);
+        toast("Mesa retomada: «"+(M.nombre||"sin nombre")+"»");
+        $("#mTerr").classList.add("hide");
+        $("#mTitle").innerHTML = 'Mesa · <span style="color:'+TCOLOR[M.terr]+'">'+esc(M.terr)+'</span>';
+        sincronizarMesa(); irACartas(); alTope();
+      };
+      c.appendChild(b);
+    }
+    box.appendChild(c);
   });
 }
 function sincronizarMesa(){
@@ -1355,7 +1455,8 @@ function mCards(){
         const key = si===0 ? "cW" : "cP";
         const row = el("div","srow");
         row.innerHTML = '<div class="slab"><i style="background:'+SCOL[si]+'"></i>'+esc(sec[0])+
-          '<em>'+esc(sec[1])+'</em></div>';
+          '<em>'+esc(sec[1])+'</em>'+
+          (cobTxt(M.terr,si) ? '<span class="cober">'+esc(cobTxt(M.terr,si))+'</span>' : '')+'</div>';
         if(M.votos.length){
           const cuenta={"1":0,"2":0,"3":0,"4":0,"5":0,G:0,X:0};
           M.votos.forEach(v=>{ const x=v.vals[i*2+si]; if(cuenta[x]!=null) cuenta[x]++; });
@@ -1507,6 +1608,28 @@ $("#mClear").onclick = ()=>{
    posición aquí es el «número de mesa». Una mesa se considera completa
    cuando entregó sus seis cartas; las que quedaron a medias no entran al
    análisis, salvo que quien facilita decida incluirlas. */
+/* Promedio del criterio en los tres territorios: el de las personas (Ronda 1)
+   y el de lo que acordaron las mesas. Es la fila de resumen del mapa y la
+   línea de contexto de cada tarjeta del plenario. */
+function resumenCriterio(rows, ci){
+  const filas = rows.filter(r=>r.ci===ci);
+  const out = [];
+  for(let si=0; si<2; si++){
+    let sPer=0, nPer=0, sMesa=0, nMesa=0, terrCon=0;
+    filas.forEach(r=>{
+      const sc = r.sect[si];
+      if(sc.nNum){ sPer += sc.prom*sc.nNum; nPer += sc.nNum; }
+      (r.cartas||[]).forEach(k=>{
+        const v = PESO[si===0 ? k.cW : k.cP];
+        if(v){ sMesa += v; nMesa++; }
+      });
+      if((r.cartas||[]).length) terrCon++;
+    });
+    out.push({ personas: nPer ? sPer/nPer : null, nPersonas: nPer,
+               mesas: nMesa ? sMesa/nMesa : null, nMesas: nMesa, territorios: terrCon });
+  }
+  return out;
+}
 function mesasInfo(t){
   const map = new Map();
   F.cartas.filter(x=>x.terr===t).forEach(x=>{
@@ -1647,9 +1770,20 @@ function hotOf(cell){
 function renderPlenario(rows){
   const box=$("#fPlen"); if(!box) return;
   box.innerHTML="";
-  const elegidas = rows.filter(r=>F.debate.indexOf(r.crit+"|"+r.terr)>=0);
+  /* Solo las que siguen teniendo carta: si una casilla quedó elegida de un
+     ensayo anterior y ya no hay nada detrás, no se dibuja una tarjeta vacía. */
+  const elegidas = rows.filter(r=>F.debate.indexOf(r.crit+"|"+r.terr)>=0 && (r.cartas||[]).length);
+  const huerfanas = F.debate.length - elegidas.length;
   if(!elegidas.length){
-    box.appendChild(el("p","lead","Todavía no ha elegido ninguna. Vaya a «Dónde conversar» y marque dos con «Llevar al plenario»."));
+    box.appendChild(el("p","lead", huerfanas
+      ? "Las casillas que había elegido ya no tienen cartas detrás. Vuelva a elegir en «Dónde conversar»."
+      : "Todavía no ha elegido ninguna. Vaya a «Dónde conversar» y marque dos con «Llevar al plenario»."));
+    if(huerfanas){
+      const b=el("button","btn ghost sm","Olvidar las casillas elegidas");
+      b.style.marginTop="10px";
+      b.onclick=()=>{ F.debate=[]; F.conclusiones={}; save("fac",F); renderFac(); };
+      box.appendChild(b);
+    }
     return;
   }
   elegidas.forEach((r,orden)=>{
@@ -1662,6 +1796,15 @@ function renderPlenario(rows){
     if(h) html += '<div class="plen-por"><b>Por qué está acá:</b> '+esc(h[1])+' — '+esc(h[2])+'</div>';
     html += '<div class="plen-q">'+esc(CRIT[ci][1])+'</div>';
 
+    /* Contexto: cómo se ve este criterio en los tres territorios juntos. */
+    {
+      const rc = resumenCriterio(rows, ci);
+      const n1 = x => x==null ? "—" : (Math.round(x*10)/10).toString().replace(".",",");
+      html += '<div class="plen-res"><span class="lbl">El criterio en los tres territorios</span>'+
+        SECT.map((sec,si)=>'<span class="pres" style="--sc:'+SCOL[si]+'"><i>'+esc(sec[0])+'</i>'+
+          'personas <b>'+n1(rc[si].personas)+'</b> · mesas <b>'+n1(rc[si].mesas)+'</b></span>').join("")+
+        '</div>';
+    }
     html += '<div class="plen-cols">';
     SECT.forEach((sec,si)=>{
       const sc=r.sect[si], nota = si===0 ? (k&&k.cW) : (k&&k.cP);
@@ -1766,7 +1909,7 @@ function regla(sc, grande){
 function contenidoPlenario(rows){
   const num = x => x==null ? "—" : (Math.round(x*10)/10).toString().replace(".",",");
   const hoy = new Date().toLocaleDateString("es-CO", {day:"numeric", month:"long", year:"numeric"});
-  const elegidas = rows.filter(r=>F.debate.indexOf(r.crit+"|"+r.terr)>=0);
+  const elegidas = rows.filter(r=>F.debate.indexOf(r.crit+"|"+r.terr)>=0 && (r.cartas||[]).length);
   let h = '<header class="pcab"><h1>Lectura del Equipo</h1>'+
     '<p>COFM2308 · NRC Colombia · Evaluación externa de la respuesta en emergencia</p>'+
     '<p class="meta">Taller de resultados preliminares · '+esc(hoy)+' · sala '+esc(sala)+
@@ -1779,7 +1922,16 @@ function contenidoPlenario(rows){
       h += '<section class="plen"><div class="plen-h"><span class="ord">'+(o+1)+'</span>'+
            esc(r.crit)+' <span style="color:'+TCOLOR[r.terr]+'">× '+esc(r.terr)+'</span></div>';
       if(ho) h += '<div class="plen-por"><b>Por qué está acá:</b> '+esc(ho[1])+' — '+esc(ho[2])+'</div>';
-      h += '<div class="plen-q">'+esc(CRIT[r.ci][1])+'</div><div class="plen-cols">';
+      h += '<div class="plen-q">'+esc(CRIT[r.ci][1])+'</div>';
+      {
+        const rc = resumenCriterio(rows, r.ci);
+        const n1 = x => x==null ? "—" : (Math.round(x*10)/10).toString().replace(".",",");
+        h += '<div class="plen-res"><span class="lbl">El criterio en los tres territorios</span>'+
+          SECT.map((sec,si)=>'<span class="pres" style="--sc:'+SCOL[si]+'"><i>'+esc(sec[0])+'</i>'+
+            'personas <b>'+n1(rc[si].personas)+'</b> · mesas <b>'+n1(rc[si].mesas)+'</b></span>').join("")+
+          '</div>';
+      }
+      h += '<div class="plen-cols">';
       SECT.forEach((sec,si)=>{
         const sc=r.sect[si], nota = si===0 ? (k&&k.cW) : (k&&k.cP);
         const razonReal = (k && k.razon2) ? (si===0?k.razon:k.razon2) : (si===0 && k ? k.razon : "");
@@ -1938,6 +2090,23 @@ function renderFac(){
        "<td style='text-align:center'>"+br+"</td>"+
        "<td class='small'>"+fteTxt+"</td>"+
        "</tr>";
+    /* Después del tercer territorio, la fila de resumen del criterio. */
+    if(r.terr===TERR[TERR.length-1]){
+      const rc = resumenCriterio(rows, r.ci);
+      const cel = x => {
+        if(x.personas==null && x.mesas==null) return "<td class='rescell' colspan='2'>—</td>";
+        return "<td class='rescell'>"+(x.personas==null?"—":
+                 "<b>"+(Math.round(x.personas*10)/10).toString().replace(".",",")+"</b>"+
+                 "<i>"+x.nPersonas+" nota"+(x.nPersonas===1?"":"s")+"</i>")+"</td>"+
+               "<td class='rescell'>"+(x.mesas==null?"—":
+                 "<b>"+(Math.round(x.mesas*10)/10).toString().replace(".",",")+"</b>"+
+                 "<i>"+x.nMesas+" carta"+(x.nMesas===1?"":"s")+"</i>")+"</td>";
+      };
+      h+="<tr class='resumen'><td class='k'>"+esc(r.crit)+"</td>"+
+         "<td class='tcell'>Los tres territorios</td>"+
+         cel(rc[0])+cel(rc[1])+
+         "<td colspan='2' class='small'>Promedio del criterio · arriba las personas, al lado las mesas</td></tr>";
+    }
   });
   $("#fTable").innerHTML=h;
 
