@@ -2125,7 +2125,7 @@ function renderFac(){
   const nc2 = new Set(rows.flatMap(r=>(r.cartas||[]).map(()=>r.crit+"|"+r.terr))).size;
   $("#fStat").innerHTML =
     '<div style="--sc:var(--steel)"><b>'+nv+'</b><span>Personas que votaron</span></div>'+
-    '<div style="--sc:var(--crimson)"><b>'+nc2+' <span style="font-size:14px;color:var(--mut)">/ 18</span></b><span>Cartas</span></div>'+
+    '<div style="--sc:var(--crimson)"><b>'+nc2+' <span style="font-size:14px;color:var(--mut)">/ '+(6*TERR.length)+'</span></b><span>Cartas</span></div>'+
     '<div style="--sc:var(--orange)"><b>'+nbr+'</b><span>Sectores muy separados</span></div>'+
     '<div style="--sc:#6E9E4A;min-width:230px"><b style="font-size:15px;line-height:2.1">'+
       TERR.map(t=>'<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:'+TCOLOR[t]+';margin-right:5px"></span>'+esc(t.split(" ")[0])+" "+F.votes.filter(v=>v.terr===t).length).join(" · ")+
@@ -2145,7 +2145,7 @@ function renderFac(){
         const n = mesasDe(m.terr).indexOf(m.mid)+1;
         x += "<span class='mesap"+(m.completa?" ok":" media")+"' title='"+esc(m.terr)+"'>"+
              (m.completa? "<b>"+(n||"·")+"</b>" : "<b>·</b>")+
-             esc(m.nombre || m.terr)+
+             esc(m.nombre || m.terr)+(m.comparte && m.comparte!==m.terr ? ' <i style="font-style:normal;color:var(--mut)">· '+esc(m.terr)+'</i>' : '')+
              (m.completa ? "" : " <i>"+m.n+" de 6</i>")+"</span>";
       });
       if(medias.length)
