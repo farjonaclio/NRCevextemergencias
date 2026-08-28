@@ -380,6 +380,13 @@ label.fld em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:
 .otram:first-of-type{border-top:0}
 .otrar{font-size:13.5px;color:var(--gray);margin-top:3px}
 .otraav{margin-top:7px;font-size:12.5px;color:#8a6100;background:var(--ab);border-radius:7px;padding:6px 9px}
+.avisosala{display:flex;align-items:center;gap:12px;flex-wrap:wrap;border:1.5px solid var(--a);background:var(--ab);
+  border-radius:12px;padding:12px 16px;margin:16px 0 0;color:#7a5600}
+.avisosala b{font-family:var(--disp);font-size:15px;color:#7a5600}
+.avisosala span{font-size:13.5px;flex:1;min-width:220px}
+.avisosala .btn{background:#8a6100}
+.salaok{margin:16px 0 0;font-size:12.5px;color:var(--mut);text-align:center}
+.salaok b{font-family:ui-monospace,Menlo,monospace;color:var(--gray)}
 .salalista{margin:12px 0 4px}
 .salalista .rotu{display:block;font-family:var(--disp);font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin-bottom:6px}
 .salafila{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid var(--line);padding:7px 0}
@@ -495,6 +502,8 @@ td.multi>span.mtag:first-child{margin-left:0}
       <p id="hHero" style="color:#C8D2DD;max-width:62ch;margin:0">Primero cada quien valora su propio territorio separando dos bloques sectoriales; después las mesas escriben por qué. Nada de lo que escriba sale de su dispositivo hasta que usted lo copie.</p>
     </div>
   </div>
+
+  <div id="hAviso" class="hide"></div>
 
   <div class="grid-roles">
     <button class="role" data-go="part" style="--rc:var(--steel)">
@@ -2615,6 +2624,24 @@ $$(".tab").forEach(t=>t.onclick=()=>{
 
 /* arranque */
 if(haySync) anotarSala(sala);
+/* Si alguien entró a una sala que no es la del taller, se dice en grande y
+   antes de votar: es el error que no se nota hasta que faltan votos. */
+{
+  const av=$("#hAviso");
+  if(av && haySync){
+    if(sala!==SALA_POR_DEFECTO){
+      av.className="avisosala";
+      av.innerHTML = "<b>Ojo: está en la sala «"+esc(sala)+"»</b>"+
+        "<span>La del taller es «"+esc(SALA_POR_DEFECTO)+"». Si no era a propósito, nadie va a ver lo que usted escriba.</span>"+
+        "<button class='btn sm' id='hIrTaller'>Ir a la sala del taller</button>";
+      const b=$("#hIrTaller");
+      if(b) b.onclick=()=>{ const u=new URL(location.href); u.searchParams.delete("sala"); location.href=u.toString(); };
+    } else {
+      av.className="salaok";
+      av.innerHTML = "Sala <b>"+esc(sala)+"</b> · todos tienen que ver este mismo nombre";
+    }
+  }
+}
 show("vHome");
 if(!haySync){ document.querySelectorAll(".neti").forEach(n=>n.classList.add("oculto"));
   ["#fPeligro","#fCambiar","#hCambiar","#fVerMan","#mVerMan"].forEach(sel=>{ const e=$(sel); if(e) e.classList.add("hide"); });
