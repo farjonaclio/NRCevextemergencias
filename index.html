@@ -418,6 +418,7 @@ td.rescell i{font-style:normal;font-size:10.5px;color:var(--mut)}
 .mesap i{font-style:normal;font-size:11.5px;color:var(--a)}
 .mesach{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--gray);cursor:pointer;margin-left:4px}
 .mesach input{width:15px;height:15px;accent-color:var(--teal)}
+.mtag.esp{border-style:dashed;color:var(--a)}
 .mtag{display:inline-block;min-width:22px;text-align:center;font-family:var(--disp);font-weight:700;font-size:11px;
   background:var(--lgt);border:1px solid var(--line);color:var(--gray);border-radius:5px;padding:1px 4px;margin-right:5px}
 td.multi{white-space:nowrap}
@@ -551,6 +552,7 @@ td.multi>span.mtag:first-child{margin-left:0}
 
   <div id="pReview" class="hide">
     <p class="lead">Revise antes de enviar. Toque cualquier casilla para corregirla.</p>
+    <p class="small hide" id="pFaltan" style="color:var(--a);margin:0 0 8px"></p>
     <div class="scroll"><table id="pTable"></table></div>
     <div class="nav">
       <button class="btn ghost" id="pBack">Volver a editar</button>
@@ -780,7 +782,7 @@ const SECT = [
 const ESC  = [["1","Bajo"],["2","Medio bajo"],["3","Medio"],["4","Medio alto"],["5","Alto"]];
 const FUERA= [["G","No me consta"],["X","No operó aquí"]];
 const VALS = ESC.concat(FUERA);
-const VLBL = {"1":"1","2":"2","3":"3","4":"4","5":"5",G:"G",X:"NA"};
+const VLBL = {"1":"1","2":"2","3":"3","4":"4","5":"5",G:"G",X:"NA",Z:"—"};
 /* La cara es lo que se ve; el número es lo que se calcula. Cada botón muestra
    la cara y la palabra, y por debajo sigue viajando el 1–5 de siempre: el
    promedio, la regla, el CSV y el Excel no cambian. */
@@ -864,7 +866,7 @@ function decodeVote(raw){
   if(checksum(body)!==s[13]) return null;
   const t = TFROM[body[0]]; if(!t) return null;
   const vals = body.slice(1).split("");
-  if(vals.some(v=>!"12345GX".includes(v))) return null;
+  if(vals.some(v=>!"12345GXZ".includes(v))) return null;   // Z = sin marcar
   return {terr:t, vals};
 }
 const limpio = t => String(t||"").replace(/[|\n\r]/g," ").trim();
@@ -917,7 +919,7 @@ function parsePaste(txt){
       if(acc.length===14){
         const d = decodeVote(acc);
         if(d){ votes.push({terr:d.terr, vals:d.vals, code:acc}); i=j; }
-        else if(TFROM[acc[0]] && /^[1-5GX]{12}$/.test(acc.slice(1,13))) bad++;
+        else if(TFROM[acc[0]] && /^[1-5GXZ]{12}$/.test(acc.slice(1,13))) bad++;
         break;
       }
     }
@@ -990,6 +992,7 @@ function escuchar(p, alCambiar){
    Así dos personas que votan igual desde el mismo equipo cuentan dos veces,
    y quien corrige su tablero sobrescribe el suyo en vez de agregar otro. */
 let P = load("part", {id:null, terr:null, vals:Array(12).fill(""), notas:{}, step:0});
+if(Array.isArray(P.vals)) P.vals = P.vals.map(v=>v==="Z"?"":v);
 if(!P.notas) P.notas = {};
 const nuevaPapeleta = ()=>{
   let x=""; const A="abcdefghijkmnpqrstuvwxyz23456789";
@@ -1167,16 +1170,27 @@ function review(){
   });
   t.innerHTML=h;
   t.querySelectorAll("td[data-i]").forEach(td=>td.onclick=()=>{ P.step=Math.floor(+td.dataset.i/2); save("part",P); goStep(); });
-  $("#pCode").disabled = P.vals.some(v=>v==="");
-  $("#pCode").textContent = P.vals.some(v=>v==="") ? "Faltan casillas por marcar"
+  /* Se puede enviar a medias: las casillas en blanco no cuentan en ningún
+     promedio, pero lo que sí marcó no se pierde por falta de tiempo. */
+  const faltan = P.vals.filter(v=>v==="").length;
+  $("#pCode").disabled = faltan===12;
+  $("#pCode").textContent = faltan===12 ? "Marque al menos una casilla"
                           : (haySync ? "Enviar mi tablero a la mesa" : "Generar mi código");
+  const avf=$("#pFaltan");
+  if(avf){
+    avf.classList.toggle("hide", !faltan || faltan===12);
+    if(faltan && faltan!==12)
+      avf.innerHTML = "Le faltan <b>"+faltan+"</b> de 12. Puede enviarlo así: lo que dejó en blanco "+
+                      "no entra en ningún promedio, y puede volver, completarlas y enviar de nuevo.";
+  }
 }
 $("#pBack").onclick = ()=>{ P.step=0; goStep(); };
 /* La misma tableta suele pasar de votar a ser la mesa. Antes había que
    buscar «Inicio» arriba; ahora el paso está donde termina el voto. */
 $("#pMesa").onclick = ()=>{ show("vMesa"); renderMesa(); alTope(); };
 $("#pCode").onclick = async ()=>{
-  const code = encodeVote(P.terr, P.vals);
+  const enviables = P.vals.map(v=>v===""?"Z":v);
+  const code = encodeVote(P.terr, enviables);
   $("#pReview").classList.add("hide"); $("#pDone").classList.remove("hide");
   $("#pTitle").textContent = haySync ? "Enviado" : "Su código";
   $("#pCodeOut").textContent = code.match(/.{1,5}/g).join(" ");
@@ -1187,7 +1201,7 @@ $("#pCode").onclick = async ()=>{
     est.className = "eestado esperando"; est.textContent = "Enviando su tablero a la mesa…";
     if(!P.id){ P.id = nuevaPapeleta(); save("part",P); }
     const ok = await subir("/votos/"+P.id,
-      {t:P.terr, v:P.vals.join(""), c:code, n:P.notas||{}});
+      {t:P.terr, v:enviables.join(""), c:code, n:P.notas||{}});
     est.className = "eestado " + (ok?"ok":"mal");
     est.textContent = ok
       ? "Listo. Su tablero ya le llegó a la mesa de "+P.terr+"; no tiene que hacer nada más."
@@ -1717,6 +1731,7 @@ function resumenCriterio(rows, ci){
       const sc = r.sect[si];
       if(sc.nNum){ sPer += sc.prom*sc.nNum; nPer += sc.nNum; }
       (r.cartas||[]).forEach(k=>{
+        if(k.espejo) return;                     // ya se contó en su territorio
         const v = PESO[si===0 ? k.cW : k.cP];
         if(v){ sMesa += v; nMesa++; }
       });
@@ -1774,8 +1789,15 @@ function consolidate(){
          asigna por orden alfabético del identificador, para que sea el mismo
          en cualquier pantalla. */
       const mesasT = mesasDe(t);
+      /* Una mesa puede responder por dos territorios: su carta queda en los
+         dos, pero la copia se marca como espejo. Se muestra en su fila —ahí
+         sirve, porque se compara con lo que votó la gente de ese territorio—
+         y no se vuelve a contar en los promedios del criterio. */
       const cs = F.cartas.filter(x=>x.terr===t && x.i===ci && mesasT.indexOf(x.mid)>=0)
-                         .map(x=>Object.assign({nMesa: mesasT.indexOf(x.mid)+1}, x))
+                         .map(x=>Object.assign({
+                            nMesa: mesasT.indexOf(x.mid)+1,
+                            espejo: !!(x.comparte && x.comparte!==t)
+                         }, x))
                          .sort((a,b)=>a.nMesa-b.nMesa);
       cell.cartas = cs;
       cell.variasMesas = mesasT.length>1;
@@ -1966,11 +1988,12 @@ function otrasMesasHTML(r){
   if(cs.length<2) return "";
   let h = '<div class="otrasm"><b>El mismo territorio lo trabajaron '+cs.length+' mesas</b>';
   cs.forEach((c,j)=>{
-    h += '<div class="otram"><span class="mtag">m'+c.nMesa+'</span>'+
+    h += '<div class="otram"><span class="mtag'+(c.espejo?' esp':'')+'">m'+c.nMesa+(c.espejo?'≡':'')+'</span>'+
          (c.nombre?'<b style="font-size:12.5px;color:var(--navy);margin-right:8px">'+esc(c.nombre)+'</b>':'')+
          '<span class="small">'+esc(SECT[0][0])+'</span> '+(c.cW?pill(c.cW):'<span class="pnone">—</span>')+
          ' <span class="small">'+esc(SECT[1][0])+'</span> '+(c.cP?pill(c.cP):'<span class="pnone">—</span>')+
          (c.nodeacuerdo?' <b style="color:var(--crimson);font-size:12.5px">sin acuerdo</b>':'')+
+         (c.espejo?'<span class="small" style="color:var(--a)"> · la misma mesa respondió por '+esc(c.comparte)+'</span>':'')+
          (c.razon?'<div class="otrar">«'+esc(c.razon)+'»'+(c.razon2?' · «'+esc(c.razon2)+'»':'')+'</div>':'')+
          (fuenteTxt(c)?'<div class="lbl">'+fuenteTxt(c)+'</div>':'')+
          '</div>';
@@ -2207,7 +2230,8 @@ function renderFac(){
     const cs = r.cartas||[];
     const mesaTd = f => !cs.length ? "<td class='cnone'>—</td>"
       : cs.length===1 ? (cs[0][f] ? cellTd(cs[0][f]) : "<td class='cnone'>—</td>")
-      : "<td class='multi'>"+cs.map(c=>'<span class="mtag" title="Mesa '+c.nMesa+(c.nombre?" · "+esc(c.nombre):"")+' de '+esc(r.terr)+'">m'+c.nMesa+'</span>'+
+      : "<td class='multi'>"+cs.map(c=>'<span class="mtag'+(c.espejo?' esp':'')+'" title="Mesa '+c.nMesa+(c.nombre?" · "+esc(c.nombre):"")+
+          (c.espejo?" · la misma mesa respondió por "+esc(c.comparte)+" y por "+esc(r.terr)+"; no se cuenta dos veces en el promedio del criterio":" de "+esc(r.terr))+'">m'+c.nMesa+(c.espejo?"≡":"")+'</span>'+
           (c[f]?pill(c[f]):'<span class="pnone">—</span>')).join("")+"</td>";
     const fteTxt = cs.length>1
       ? cs.map(c=>'<span class="mtag">m'+c.nMesa+'</span>'+(fuenteTxt(c)||"—")+
@@ -2215,7 +2239,9 @@ function renderFac(){
       : (k?fuenteTxt(k):"")+(k&&k.nodeacuerdo?" <b style='color:var(--crimson)'>· sin acuerdo</b>":"");
     h+="<tr><td class='k'>"+esc(r.crit)+"</td>"+
        "<td class='tcell' style='--tc:"+TCOLOR[r.terr]+"'>"+esc(r.terr)+
-         (cs.length>1?" <span class='small'>· "+cs.length+" mesas</span>":"")+"</td>"+
+         (cs.length>1?" <span class='small'>· "+cs.length+" mesas</span>":"")+
+         (cs.length && cs.every(c=>c.espejo)
+            ? " <span class='small' style='color:var(--a)'>· la responde la mesa de "+esc(cs[0].comparte)+"</span>" : "")+"</td>"+
        promTd(r.sect[0],nW)+mesaTd("cW")+
        promTd(r.sect[1],nP)+mesaTd("cP")+
        "<td style='text-align:center'>"+br+"</td>"+
@@ -2520,7 +2546,7 @@ $("#fCsv").onclick = ()=>{
   /* Formato largo: una fila por carta. Si dos mesas trabajaron el mismo
      territorio, salen las dos filas, con los mismos promedios y la columna
      «Mesa» para distinguirlas. */
-  const head=["Criterio","Territorio","Mesa","Mesas_en_el_territorio","Promedio_WASH_Aloj","n_WA","Mesa_WASH_Aloj","Promedio_Prot_ICLA_Educ","n_PIE","Mesa_Prot_ICLA_Educ","Distancia_entre_sectores_en_peldanos","Distancia_entre_mesas_en_peldanos","Porque_compartido_o_WASH_Aloj","Porque_Prot_ICLA_Educ","Lo_se_por","Lo_se_por_Prot_ICLA_Educ","Sin_acuerdo","Notas_ronda1","Nuestra_lectura","Por_que_conversarla","Al_plenario","Lo_que_se_acordo_en_la_sala"];
+  const head=["Criterio","Territorio","Mesa","Mesas_en_el_territorio","Mesa_responde_tambien_por","Promedio_WASH_Aloj","n_WA","Mesa_WASH_Aloj","Promedio_Prot_ICLA_Educ","n_PIE","Mesa_Prot_ICLA_Educ","Distancia_entre_sectores_en_peldanos","Distancia_entre_mesas_en_peldanos","Porque_compartido_o_WASH_Aloj","Porque_Prot_ICLA_Educ","Lo_se_por","Lo_se_por_Prot_ICLA_Educ","Sin_acuerdo","Notas_ronda1","Nuestra_lectura","Por_que_conversarla","Al_plenario","Lo_que_se_acordo_en_la_sala"];
   const q = t => '"'+String(t||"").replace(/"/g,"'")+'"';
   const lines=[head.join(";")];
   rows.forEach(r=>{
@@ -2529,6 +2555,7 @@ $("#fCsv").onclick = ()=>{
     cs.forEach(k=>{
       lines.push([r.crit,r.terr,
         k?k.nMesa:"", (r.cartas||[]).length,
+        k&&k.comparte&&k.comparte!==r.terr ? k.comparte : "",
         r.sect[0].prom==null?"":(Math.round(r.sect[0].prom*100)/100), r.sect[0].n, k?k.cW:"",
         r.sect[1].prom==null?"":(Math.round(r.sect[1].prom*100)/100), r.sect[1].n, k?k.cP:"",
         r.dist==null?"":String(r.dist),
