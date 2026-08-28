@@ -377,6 +377,16 @@ label.fld em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:
 .otram:first-of-type{border-top:0}
 .otrar{font-size:13.5px;color:var(--gray);margin-top:3px}
 .otraav{margin-top:7px;font-size:12.5px;color:#8a6100;background:var(--ab);border-radius:7px;padding:6px 9px}
+.mesasbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:2px 0 14px}
+.mesasl{font-family:var(--disp);font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mut)}
+.mesap{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;border-radius:999px;padding:4px 11px;border:1px solid var(--line);background:#fff;color:var(--gray)}
+.mesap b{font-family:var(--disp);font-size:11.5px;color:#fff;background:var(--mut);width:17px;height:17px;border-radius:50%;display:grid;place-items:center}
+.mesap.ok{border-color:#BFD6C4;background:#F2F8F3;color:var(--ink)}
+.mesap.ok b{background:#5C8A3C}
+.mesap.media{border-style:dashed}
+.mesap i{font-style:normal;font-size:11.5px;color:var(--a)}
+.mesach{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--gray);cursor:pointer;margin-left:4px}
+.mesach input{width:15px;height:15px;accent-color:var(--teal)}
 .mtag{display:inline-block;min-width:22px;text-align:center;font-family:var(--disp);font-weight:700;font-size:11px;
   background:var(--lgt);border:1px solid var(--line);color:var(--gray);border-radius:5px;padding:1px 4px;margin-right:5px}
 td.multi{white-space:nowrap}
@@ -449,10 +459,9 @@ td.multi>span.mtag:first-child{margin-left:0}
   <div class="hero">
     <div class="hero-body">
       <p class="eyebrow" style="color:var(--lime)">Taller de resultados preliminares · una hora</p>
-      <h1 style="color:#fff">Ustedes vivieron la respuesta.<br>Nosotros la leímos.</h1>
-      <p id="hHero" style="color:#C8D2DD;max-width:62ch;margin:0">Antes de abrir nuestra lectura queremos la de ustedes. Primero cada quien valora su propio territorio separando dos bloques sectoriales; después las mesas escriben por qué. Nada de lo que escriba sale de su dispositivo hasta que usted lo copie.</p>
+      <h1 style="color:#fff">Ustedes vivieron la respuesta.<br>Cuéntennos cómo la leen.</h1>
+      <p id="hHero" style="color:#C8D2DD;max-width:62ch;margin:0">Primero cada quien valora su propio territorio separando dos bloques sectoriales; después las mesas escriben por qué. Nada de lo que escriba sale de su dispositivo hasta que usted lo copie.</p>
     </div>
-    <div class="hero-env" aria-hidden="true"><div class="env"><span>40′</span></div><b>No abrir antes</b></div>
   </div>
 
   <div class="grid-roles">
@@ -469,7 +478,7 @@ td.multi>span.mtag:first-child{margin-left:0}
     <button class="role" data-go="fac" style="--rc:var(--lime)">
       <div class="num">3</div>
       <b>Consolidar</b>
-      <em id="hRol3">Para quien facilita. Pego los tres bloques de las mesas y sale el mapa, dónde conversar y el sobre.</em>
+      <em id="hRol3">Para quien facilita. Los tableros y las cartas llegan solos: sale el mapa y dónde conviene conversar.</em>
     </button>
   </div>
 
@@ -546,6 +555,9 @@ td.multi>span.mtag:first-child{margin-left:0}
   <div id="mTerr">
     <p class="lead">Seis cartas, una por criterio. En cada una se pinta por separado lo que pasó en WASH y Alojamiento y lo que pasó en Protección: ICLA y Educación.</p>
     <div class="chips" id="mTerrChips"></div>
+    <label class="fld" for="mNombre" style="margin-top:14px">¿Cómo se llama esta mesa? <span class="small" style="font-weight:400">— opcional, para reconocerla en la consolidación</span></label>
+    <input type="text" id="mNombre" maxlength="28" placeholder="Los del Putumayo, Mesa de la ventana, Equipo 2…"
+      style="width:100%;max-width:34ch;font:inherit;font-size:15px;padding:10px 12px;border:1.5px solid #C9D3DC;border-radius:9px;background:#fff">
     <div class="nav"><button class="btn" id="mStart" disabled>Empezar</button>
       <button class="btn ghost hide" id="mRehacer">Empezar de nuevo</button></div>
   </div>
@@ -602,6 +614,7 @@ td.multi>span.mtag:first-child{margin-left:0}
     <button class="btn ghost" id="fCsv">Descargar CSV</button>
   </div>
   <div class="stat" id="fStat"></div>
+  <div id="fMesas" class="mesasbar"></div>
   <details id="fPeligro"><summary>Antes o después del taller</summary>
     <p class="small" style="margin:8px 0">Solo entre un ensayo y la sesión de verdad, o cuando el informe esté cerrado.
       Vaciar borra los tableros y las cartas de esta sala <b>para todos los dispositivos</b>, y no se puede deshacer.</p>
@@ -613,27 +626,25 @@ td.multi>span.mtag:first-child{margin-left:0}
     <button class="tab" data-tab="calientes" aria-selected="false">Dónde conversar</button>
     <button class="tab" data-tab="plenario" aria-selected="false">Al plenario</button>
     <button class="tab" data-tab="cartas" aria-selected="false">Cartas</button>
-    <button class="tab" data-tab="sobre" aria-selected="false">El sobre</button>
   </div>
 
   <div id="tabMapa">
-    <p class="small" style="margin-top:12px">La escala va de <b>1 · bajo</b> a <b>5 · alto</b> en grado de cumplimiento. <b>Promedio</b> es el promedio de las notas que pusieron todas las personas de ese territorio en ese sector en la Ronda 1 —no es un voto individual—. «No me consta» y «NA» no entran en el cálculo. Pase el cursor por la celda para ver cuántas votaron y cómo se repartieron. <b>La mesa</b> es lo que acordaron juntas, con su razón escrita. <b>Nuestra lectura</b> aparece solo cuando usted abra el sobre.</p>
+    <p class="small" style="margin-top:12px">La escala va de <b>1 · bajo</b> a <b>5 · alto</b> en grado de cumplimiento. <b>Promedio</b> es el promedio de las notas que pusieron todas las personas de ese territorio en ese sector en la Ronda 1 —no es un voto individual—. «No me consta» y «NA» no entran en el cálculo. Pase el cursor por la celda para ver cuántas votaron y cómo se repartieron. <b>La mesa</b> es lo que acordaron juntas, con su razón escrita.</p>
     <div class="scroll"><table id="fTable"></table></div>
   </div>
 
   <div id="tabCalientes" class="hide">
     <p class="small" style="margin-top:12px">No son errores ni casillas mal puestas: son aquellas donde cinco minutos de conversación
-      cambian lo que vamos a escribir. Las primeras salen de comparaciones internas del taller —la mesa contra el voto de su gente, un sector
-      contra el otro—: eso se puede afirmar hoy. Las siguientes contrastan con nuestra lectura provisional, que es una hipótesis y no un
-      resultado: eso se pregunta, no se concluye. Marque dos con «Llevar al plenario» y suben arriba.</p>
+      cambian lo que vamos a escribir. Todas salen de comparaciones internas del taller: la mesa contra el voto de su gente, un sector
+      contra el otro, dos mesas del mismo territorio entre sí. Son cosas que esta sala puede afirmar hoy, sin depender de nadie más. Marque dos con «Llevar al plenario» y suben arriba.</p>
     <p class="small" id="fHotN" style="margin:6px 0 0;font-weight:700"></p>
     <div id="fHot"></div>
   </div>
 
   <div id="tabPlenario" class="hide">
     <p class="small" style="margin-top:12px">Esta es la pantalla que se proyecta en la Ronda 4. Trae, para cada casilla elegida,
-      todo lo que hace falta para conversarla: lo que puso la gente, lo que acordó la mesa, por qué, de dónde lo sabe, las notas
-      que dejaron y —si ya abrió el sobre— nuestra hipótesis. Al final de cada una hay un campo para escribir la conclusión
+      todo lo que hace falta para conversarla: lo que puso la gente, lo que acordó la mesa, por qué, de dónde lo sabe, y las notas
+      que dejaron. Al final de cada una hay un campo para escribir la conclusión
       mientras se dice: eso es lo que se lleva al informe.</p>
     <div class="nav">
       <button class="btn mag" id="fProy">Proyectar el plenario</button>
@@ -647,27 +658,6 @@ td.multi>span.mtag:first-child{margin-left:0}
     <div id="fCartas"></div>
   </div>
 
-  <div id="tabSobre" class="hide">
-    <div id="sobreClosed">
-      <div class="card tint" style="text-align:center;padding:34px 18px">
-        <div style="font-size:46px;line-height:1">✉︎</div>
-        <h2 style="margin:6px 0 4px">El sobre sigue cerrado</h2>
-        <p class="lead" style="margin:0 auto 16px;max-width:52ch">Nuestra hipótesis de trabajo para cada criterio en cada territorio, escrita antes del taller. No es el resultado de la evaluación: es lo que hoy creemos, y este taller sirve justamente para ponerlo a prueba. Se abre en el minuto cuarenta, no antes.</p>
-        <button class="btn mag" id="btnSobre">Abrir el sobre</button>
-      </div>
-    </div>
-    <div id="sobreOpen" class="hide">
-      <div class="notice"><b>Hipótesis de trabajo, no resultado.</b> Escrita con la evidencia disponible antes del taller. El informe todavía no está formulado y esta sesión es uno de sus insumos: donde la mesa y nosotros no coincidimos, la pregunta es qué falta por mirar, no quién se equivocó. <b>SD</b> = todavía no tenemos con qué sostener un juicio en ese territorio.</div>
-      <div class="scroll"><table id="fSobre"></table></div>
-    </div>
-    <div id="sobrePaste" class="hide">
-      <p class="lead">Este despliegue no trae la lectura del equipo evaluador. Péguela aquí para usarla en la sesión.</p>
-      <textarea id="sobreIn" rows="5" class="mono" placeholder="#SOBRE …"></textarea>
-      <div class="nav"><button class="btn" id="sobreLoad">Cargar el sobre</button>
-        <button class="btn ghost" id="sobreDemo">Usar un sobre de ensayo</button></div>
-      <p class="small" style="margin-top:8px">El de ensayo trae dieciocho casillas de mentira, marcadas <b>[DEMO]</b>, y sirve solo para practicar el minuto cuarenta. Reemplácelo por el verdadero antes de la sesión.</p>
-    </div>
-  </div>
 </section>
 
 <div id="proy" class="hide">
@@ -745,14 +735,6 @@ const FAYUDA = {VV:"Estuve adentro: me tocó hacerlo o me pasó a mí",
                 PR:"Está en los hallazgos que acabamos de ver",
                 CZ:"Es lo que intuyo, sin nada que lo respalde todavía"};
 const FLBL = Object.fromEntries(FUENTES);
-
-/* Lectura provisional del equipo evaluador, codificada en base64.
-   ── Si este repositorio es público y no quiere que se pueda leer antes del taller,
-      borre la línea siguiente: la app pedirá pegar el sobre el día de la sesión. */
-const SOBRE_B64 = "";
-/* Sobre de ENSAYO. Sirve para practicar la mecánica antes de tener la lectura
-   definitiva: todas sus frases dicen [DEMO] y la app lo rotula en pantalla. */
-const SOBRE_DEMO = "eyJQZXJ0aW5lbmNpYXxQdXR1bWF5byI6IHsiYyI6ICIzIiwgInIiOiAiW0RFTU9dIFRleHRvIGRlIHBydWViYSwgbm8gZXMgdW5hIGxlY3R1cmEgcmVhbC4ifSwgIlBlcnRpbmVuY2lhfE5vcnRlIGRlIFNhbnRhbmRlciI6IHsiYyI6ICI0IiwgInIiOiAiW0RFTU9dIFRleHRvIGRlIHBydWViYSwgbm8gZXMgdW5hIGxlY3R1cmEgcmVhbC4ifSwgIlBlcnRpbmVuY2lhfENhdWNhIjogeyJjIjogIjUiLCAiciI6ICJbREVNT10gVGV4dG8gZGUgcHJ1ZWJhLCBubyBlcyB1bmEgbGVjdHVyYSByZWFsLiJ9LCAiQ29oZXJlbmNpYXxQdXR1bWF5byI6IHsiYyI6ICIyIiwgInIiOiAiW0RFTU9dIFRleHRvIGRlIHBydWViYSwgbm8gZXMgdW5hIGxlY3R1cmEgcmVhbC4ifSwgIkNvaGVyZW5jaWF8Tm9ydGUgZGUgU2FudGFuZGVyIjogeyJjIjogIjQiLCAiciI6ICJbREVNT10gVGV4dG8gZGUgcHJ1ZWJhLCBubyBlcyB1bmEgbGVjdHVyYSByZWFsLiJ9LCAiQ29oZXJlbmNpYXxDYXVjYSI6IHsiYyI6ICI1IiwgInIiOiAiW0RFTU9dIFRleHRvIGRlIHBydWViYSwgbm8gZXMgdW5hIGxlY3R1cmEgcmVhbC4ifSwgIkVmZWN0aXZpZGFkfFB1dHVtYXlvIjogeyJjIjogIjMiLCAiciI6ICJbREVNT10gVGV4dG8gZGUgcHJ1ZWJhLCBubyBlcyB1bmEgbGVjdHVyYSByZWFsLiJ9LCAiRWZlY3RpdmlkYWR8Tm9ydGUgZGUgU2FudGFuZGVyIjogeyJjIjogIjMiLCAiciI6ICJbREVNT10gVGV4dG8gZGUgcHJ1ZWJhLCBubyBlcyB1bmEgbGVjdHVyYSByZWFsLiJ9LCAiRWZlY3RpdmlkYWR8Q2F1Y2EiOiB7ImMiOiAiMyIsICJyIjogIltERU1PXSBUZXh0byBkZSBwcnVlYmEsIG5vIGVzIHVuYSBsZWN0dXJhIHJlYWwuIn0sICJFZmljaWVuY2lhfFB1dHVtYXlvIjogeyJjIjogIlNEIiwgInIiOiAiW0RFTU9dIFRleHRvIGRlIHBydWViYSwgbm8gZXMgdW5hIGxlY3R1cmEgcmVhbC4ifSwgIkVmaWNpZW5jaWF8Tm9ydGUgZGUgU2FudGFuZGVyIjogeyJjIjogIlNEIiwgInIiOiAiW0RFTU9dIFRleHRvIGRlIHBydWViYSwgbm8gZXMgdW5hIGxlY3R1cmEgcmVhbC4ifSwgIkVmaWNpZW5jaWF8Q2F1Y2EiOiB7ImMiOiAiU0QiLCAiciI6ICJbREVNT10gVGV4dG8gZGUgcHJ1ZWJhLCBubyBlcyB1bmEgbGVjdHVyYSByZWFsLiJ9LCAiTXVsdGlzZWN0b3JpYWxpZGFkfFB1dHVtYXlvIjogeyJjIjogIjMiLCAiciI6ICJbREVNT10gVGV4dG8gZGUgcHJ1ZWJhLCBubyBlcyB1bmEgbGVjdHVyYSByZWFsLiJ9LCAiTXVsdGlzZWN0b3JpYWxpZGFkfE5vcnRlIGRlIFNhbnRhbmRlciI6IHsiYyI6ICIzIiwgInIiOiAiW0RFTU9dIFRleHRvIGRlIHBydWViYSwgbm8gZXMgdW5hIGxlY3R1cmEgcmVhbC4ifSwgIk11bHRpc2VjdG9yaWFsaWRhZHxDYXVjYSI6IHsiYyI6ICI0IiwgInIiOiAiW0RFTU9dIFRleHRvIGRlIHBydWViYSwgbm8gZXMgdW5hIGxlY3R1cmEgcmVhbC4ifSwgIkNvb3JkaW5hY2nDs258UHV0dW1heW8iOiB7ImMiOiAiMyIsICJyIjogIltERU1PXSBUZXh0byBkZSBwcnVlYmEsIG5vIGVzIHVuYSBsZWN0dXJhIHJlYWwuIn0sICJDb29yZGluYWNpw7NufE5vcnRlIGRlIFNhbnRhbmRlciI6IHsiYyI6ICI0IiwgInIiOiAiW0RFTU9dIFRleHRvIGRlIHBydWViYSwgbm8gZXMgdW5hIGxlY3R1cmEgcmVhbC4ifSwgIkNvb3JkaW5hY2nDs258Q2F1Y2EiOiB7ImMiOiAiNSIsICJyIjogIltERU1PXSBUZXh0byBkZSBwcnVlYmEsIG5vIGVzIHVuYSBsZWN0dXJhIHJlYWwuIn0sICJfX2RlbW8iOiB0cnVlfQ==";
 
 /* ═══════════════════════════ utilidades ═══════════════════════════ */
 const $ = s => document.querySelector(s);
@@ -880,7 +862,7 @@ function parsePaste(txt){
    Firebase Realtime Database por REST puro: sin SDK, sin dependencias.
    Si DB está vacío o la red falla, la app sigue funcionando con códigos. */
 const DB = "https://nrcevexem-default-rtdb.firebaseio.com";
-const SALA_POR_DEFECTO = "cofm2308-k7rq";
+const SALA_POR_DEFECTO = "taller-2026-08-28";
 
 const sala = (new URLSearchParams(location.search).get("sala") || SALA_POR_DEFECTO)
                .toLowerCase().replace(/[^a-z0-9-]/g,"").slice(0,32);
@@ -965,7 +947,7 @@ if(M.terrCartas && M.terr && M.terrCartas!==M.terr){
   M.cartas = Array(6).fill(null).map(NUEVA_CARTA); M.votos = []; M.open = 0;
   M.terrCartas = M.terr;
 }
-let F = load("fac", {votes:[], cartas:[], sobreOpen:false, sobre:null, debate:[], conclusiones:{}});
+let F = load("fac", {votes:[], cartas:[], debate:[], conclusiones:{}});
 if(!F.conclusiones) F.conclusiones = {};
 if(!Array.isArray(F.debate)) F.debate = [];
 
@@ -1167,6 +1149,11 @@ function renderMesa(){
     };
     wrap.appendChild(b);
   });
+  const nb=$("#mNombre");
+  if(nb){
+    nb.value = M.nombre || "";
+    nb.oninput = ()=>{ M.nombre = nb.value.slice(0,28); save("mesa",M); agendarSubidaCartas(); };
+  }
   $("#mStart").disabled = !M.terr;
   $("#mTerr").classList.remove("hide"); $("#mForm").classList.add("hide"); $("#mVotos").classList.add("hide");
   $("#mTitle").textContent = "¿Qué territorio le tocó a esta mesa?";
@@ -1234,6 +1221,9 @@ function agendarSubidaCartas(){
   clearTimeout(subirCartaPend);
   subirCartaPend = setTimeout(()=>{
     const paq = {};
+    /* El nombre viaja con las cartas, bajo una clave que no choca con los
+       índices 0–5: así la consolidación puede llamar a la mesa por su nombre. */
+    if((M.nombre||"").trim()) paq.n = M.nombre.trim();
     M.cartas.forEach((c,i)=>{ if(c.cW||c.cP) paq[i] = {cW:c.cW||"", cP:c.cP||"", razon:c.razon||"",
       razon2:c.razon2||"", sep:!!separado(c), fuente:c.fuente||"", fuente2:c.fuente2||"", nd:!!c.nodeacuerdo}; });
     const ind = $("#mSync"); if(ind) ind.textContent = "guardando…";
@@ -1511,37 +1501,32 @@ $("#mClear").onclick = ()=>{
 };
 
 /* ═══════════════════════════ facilitador ═══════════════════════════ */
-/* Convierte un sobre viejo de tres niveles a la escala de cinco. La conversión
-   es mecánica y se avisa en pantalla: hay que revisarla, no darla por buena. */
-const VIEJO5 = {V:"4", A:"3", R:"2"};
-function normalizarSobre(o){
-  if(!o) return o;
-  let convertido = false;
-  const out = {};
-  for(const k in o){
-    const e = o[k];
-    if(k.indexOf("|")<0 || !e || typeof e!=="object"){ out[k]=e; continue; }
-    if(VIEJO5[e.c]){ out[k] = {c:VIEJO5[e.c], r:e.r}; convertido = true; }
-    else out[k] = e;
-  }
-  if(convertido) out.__convertido = true;
-  return out;
+/* Las mesas que escribieron algo en ese territorio, en orden estable: su
+   posición aquí es el «número de mesa». Una mesa se considera completa
+   cuando entregó sus seis cartas; las que quedaron a medias no entran al
+   análisis, salvo que quien facilita decida incluirlas. */
+function mesasInfo(t){
+  const map = new Map();
+  F.cartas.filter(x=>x.terr===t).forEach(x=>{
+    const e = map.get(x.mid) || {mid:x.mid, nombre:"", n:0};
+    e.n++; if(x.nombre) e.nombre = x.nombre;
+    map.set(x.mid, e);
+  });
+  return [...map.values()].sort((a,b)=> a.mid<b.mid ? -1 : 1)
+                          .map(e=>Object.assign(e, {completa: e.n>=6}));
 }
-function sobreData(){
-  if(F.sobre) return normalizarSobre(F.sobre);
-  if(SOBRE_B64){ try{ return normalizarSobre(JSON.parse(b64d(SOBRE_B64))); }catch(e){} }
-  return null;
-}
-/* Identificadores de las mesas que han escrito algo en ese territorio,
-   en orden estable. Su posición aquí es el «número de mesa». */
 function mesasDe(t){
-  return [...new Set(F.cartas.filter(x=>x.terr===t).map(x=>x.mid))].sort();
+  return mesasInfo(t).filter(m => F.incluirParciales || m.completa).map(m=>m.mid);
 }
+const nombreMesa = (t, mid) => {
+  const m = mesasInfo(t).find(x=>x.mid===mid);
+  return m && m.nombre ? m.nombre : "";
+};
 function consolidate(){
   const rows=[];
   CRIT.forEach((c,ci)=>{
     TERR.forEach(t=>{
-      const cell={crit:c[0], terr:t, ci, sect:[], carta:null, sobre:null,
+      const cell={crit:c[0], terr:t, ci, sect:[], carta:null,
         notas: F.votes.filter(v=>v.terr===t && v.notas && v.notas[ci] && String(v.notas[ci]).trim())
                       .map(v=>String(v.notas[ci]).trim())};
       for(let s=0;s<2;s++){
@@ -1566,7 +1551,7 @@ function consolidate(){
          asigna por orden alfabético del identificador, para que sea el mismo
          en cualquier pantalla. */
       const mesasT = mesasDe(t);
-      const cs = F.cartas.filter(x=>x.terr===t && x.i===ci)
+      const cs = F.cartas.filter(x=>x.terr===t && x.i===ci && mesasT.indexOf(x.mid)>=0)
                          .map(x=>Object.assign({nMesa: mesasT.indexOf(x.mid)+1}, x))
                          .sort((a,b)=>a.nMesa-b.nMesa);
       cell.cartas = cs;
@@ -1586,8 +1571,6 @@ function consolidate(){
       const k = cell.carta;
       const pw = k?(PESO[k.cW]||0):0, pp = k?(PESO[k.cP]||0):0;
       cell.dist = (pw&&pp) ? Math.abs(pw-pp) : (k ? null : cell.distVoto);
-      const sd = sobreData();
-      cell.sobre = sd ? (sd[c[0]+"|"+t] || null) : null;
       rows.push(cell);
     });
   });
@@ -1596,13 +1579,10 @@ function consolidate(){
 /* ── Qué merece plenario ──────────────────────────────────────────────────
    El informe todavía no existe: este taller es uno de sus insumos. Así que
    acá no se declara ninguna discrepancia con un veredicto. Lo que se ordena
-   son dos cosas distintas, y en ese orden:
-
-   · lo que se puede AFIRMAR hoy — comparaciones internas del propio taller:
-     la mesa contra el voto individual de su gente, y un sector contra el otro
-     dentro de la misma carta. Son hechos del ejercicio.
-   · lo que se puede PREGUNTAR — el contraste con la lectura provisional del
-     equipo evaluador, que es una hipótesis de trabajo y no un resultado.     */
+   salen todas del propio taller: dos mesas del mismo territorio que no
+   coinciden, la mesa contra el voto individual de su gente, un sector contra
+   el otro dentro de la misma carta, y el sustento declarado. Son hechos del
+   ejercicio: la sala los puede afirmar hoy, sin depender de nadie más.       */
 /* Texto de la fuente: una sola si es compartida, las dos rotuladas si difieren. */
 function fuenteTxt(k){
   const a = k.fuente ? (FLBL[k.fuente]||k.fuente) : "";
@@ -1615,10 +1595,6 @@ function fuenteTxt(k){
 function hotOf(cell){
   const k = cell.carta;
   if(!k) return null;
-  const sv = cell.sobre ? cell.sobre.c : null;
-  const cols = [k.cW,k.cP].filter(Boolean);
-  const dW = cell.sect[0].dom, dP = cell.sect[1].dom;
-  const dist = (a,b)=> (PESO[a]&&PESO[b]) ? Math.abs(PESO[a]-PESO[b]) : 0;
   /* mesa contra el promedio de su propia gente; el promedio lleva decimales */
   const dPro = (prom,nota)=> (prom!=null && PESO[nota]) ? Math.abs(prom-PESO[nota]) : 0;
   const salto = Math.max(dPro(cell.sect[0].prom, k.cW), dPro(cell.sect[1].prom, k.cP));
@@ -1648,13 +1624,7 @@ function hotOf(cell){
     return [3,"La mesa se movió "+num(salto)+" peldaños respecto del promedio de su gente",
       "Lo que pusieron solos y lo que acordaron juntos no coincide del todo. Se registra; se discute solo si sobra tiempo."];
 
-  /* 2 · Lo que hay que preguntarle a la sala antes de escribir. */
-  if(sv==="SD" && cols.some(c=>PESO[c]>0))
-    return [2,"Aquí ellos tienen algo que nosotros no",
-      "Pusieron nota en un criterio donde nuestra lectura provisional dice «sin dato». Puede haber evidencia que no alcanzamos a ver."];
-  if(sv && PESO[sv] && cols.some(c=>dist(c,sv)>=3))
-    return [2,"Nuestra lectura provisional y la de la mesa se separan",
-      "Hay tres peldaños o más entre lo que pusimos nosotros y lo que puso la mesa. No sabemos todavía quién tiene razón: por eso se pregunta antes de redactar."];
+  /* 2 · Lo que conviene mirar antes de redactar. */
   {
     const flojo = f => f==="CZ" || f==="CO";
     const fs = [];
@@ -1667,9 +1637,6 @@ function hotOf(cell){
   if(cell.sect.some(x=>x.n && x.counts.G > x.nNum))
     return [3,"Casi nadie sabía en un bloque",
       "Ahí hay un vacío de información: el informe tendrá que declararlo en vez de rellenarlo."];
-  if(sv && PESO[sv] && cols.some(c=>c!==sv))
-    return [4,"Diferencia menor con nuestra lectura",
-      "Uno o dos peldaños. Se registra y no se debate."];
   return null;
 }
 /* ── La pantalla que se proyecta en la Ronda 4 ──────────────────────────
@@ -1715,10 +1682,6 @@ function renderPlenario(rows){
     if((r.notas||[]).length)
       html += '<div class="notacard"><b>'+r.notas.length+' nota'+(r.notas.length===1?"":"s")+
               ' de la Ronda 1</b>'+r.notas.map(x=>"«"+esc(x)+"»").join("<br>")+'</div>';
-    if(F.sobreOpen && r.sobre)
-      html += '<div class="plen-sob"><b>Nuestra hipótesis previa: '+esc(r.sobre.c)+'</b> '+esc(r.sobre.r||"")+'</div>';
-    else
-      html += '<div class="plen-sob cerrado">Nuestra hipótesis se ve al abrir el sobre.</div>';
 
     html += '<div class="plen-min">'+
       '<span><b>Min 1</b> se lee la carta entera y se pone al lado la nuestra</span>'+
@@ -1761,6 +1724,7 @@ function otrasMesasHTML(r){
   let h = '<div class="otrasm"><b>El mismo territorio lo trabajaron '+cs.length+' mesas</b>';
   cs.forEach((c,j)=>{
     h += '<div class="otram"><span class="mtag">m'+c.nMesa+'</span>'+
+         (c.nombre?'<b style="font-size:12.5px;color:var(--navy);margin-right:8px">'+esc(c.nombre)+'</b>':'')+
          '<span class="small">'+esc(SECT[0][0])+'</span> '+(c.cW?pill(c.cW):'<span class="pnone">—</span>')+
          ' <span class="small">'+esc(SECT[1][0])+'</span> '+(c.cP?pill(c.cP):'<span class="pnone">—</span>')+
          (c.nodeacuerdo?' <b style="color:var(--crimson);font-size:12.5px">sin acuerdo</b>':'')+
@@ -1831,8 +1795,6 @@ function contenidoPlenario(rows){
       if((r.notas||[]).length)
         h += '<div class="notacard"><b>'+r.notas.length+' nota'+(r.notas.length===1?"":"s")+
              ' de la Ronda 1</b>'+r.notas.map(x=>"«"+esc(x)+"»").join("<br>")+'</div>';
-      if(F.sobreOpen && r.sobre)
-        h += '<div class="plen-sob"><b>Nuestra hipótesis previa: '+esc(r.sobre.c)+'</b> '+esc(r.sobre.r||"")+'</div>';
       const con = (F.conclusiones||{})[r.crit+"|"+r.terr];
       if(con) h += '<div class="plen-con"><b>Lo que se acordó en la sala</b>'+esc(con)+'</div>';
       h += '</section>';
@@ -1885,9 +1847,10 @@ function sincronizarFac(){
     Object.entries(k).forEach(([tc,paq])=>{
       const t = TFROM[tc.slice(0,1)]; if(!t) return;
       const mid = tc.slice(1) || "-";
+      const nombre = typeof (paq||{}).n === "string" ? paq.n : "";
       Object.entries(paq||{}).forEach(([i,c])=>{
-        if(!c || (!c.cW && !c.cP)) return;
-        F.cartas.push({terr:t, mid, i:+i, cW:c.cW||"", cP:c.cP||"", razon:c.razon||"",
+        if(i==="n" || !c || typeof c!=="object" || (!c.cW && !c.cP)) return;
+        F.cartas.push({terr:t, mid, nombre, i:+i, cW:c.cW||"", cP:c.cP||"", razon:c.razon||"",
                        razon2:c.razon2||"", sep:!!c.sep, fuente:c.fuente||"", fuente2:c.fuente2||"", nodeacuerdo:!!c.nd});
       });
     });
@@ -1896,10 +1859,11 @@ function sincronizarFac(){
 }
 function renderFac(){
   const rows=consolidate();
-  const nv=F.votes.length, nc=new Set(F.cartas.map(c=>c.terr+"|"+c.i)).size;
+  const nv=F.votes.length;
   const porT = TERR.map(t=>t.split(" ")[0]+" "+F.votes.filter(v=>v.terr===t).length).join(" · ");
   const nbr = rows.filter(r=>r.dist>=3).length;
-  const nc2 = new Set(F.cartas.map(c=>c.terr+"|"+c.i)).size;
+  /* Solo cuentan las cartas que entraron al análisis. */
+  const nc2 = new Set(rows.flatMap(r=>(r.cartas||[]).map(()=>r.crit+"|"+r.terr))).size;
   $("#fStat").innerHTML =
     '<div style="--sc:var(--steel)"><b>'+nv+'</b><span>Personas que votaron</span></div>'+
     '<div style="--sc:var(--crimson)"><b>'+nc2+' <span style="font-size:14px;color:var(--mut)">/ 18</span></b><span>Cartas</span></div>'+
@@ -1908,11 +1872,37 @@ function renderFac(){
       TERR.map(t=>'<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:'+TCOLOR[t]+';margin-right:5px"></span>'+esc(t.split(" ")[0])+" "+F.votes.filter(v=>v.terr===t).length).join(" · ")+
     '</b><span>Votos por territorio</span></div>';
 
+  /* Quiénes escribieron y quiénes quedaron a medias. Es lo primero que hay
+     que mirar antes de leer el mapa. */
+  const mb=$("#fMesas");
+  if(mb){
+    const todas = TERR.flatMap(t=>mesasInfo(t).map(m=>Object.assign({terr:t}, m)));
+    const listas = todas.filter(m=>m.completa), medias = todas.filter(m=>!m.completa);
+    if(!todas.length){
+      mb.innerHTML = "<span class='small'>Todavía no ha escrito ninguna mesa.</span>";
+    } else {
+      let x = "<span class='mesasl'>Mesas</span>";
+      todas.forEach(m=>{
+        const n = mesasDe(m.terr).indexOf(m.mid)+1;
+        x += "<span class='mesap"+(m.completa?" ok":" media")+"' title='"+esc(m.terr)+"'>"+
+             (m.completa? "<b>"+(n||"·")+"</b>" : "<b>·</b>")+
+             esc(m.nombre || m.terr)+
+             (m.completa ? "" : " <i>"+m.n+" de 6</i>")+"</span>";
+      });
+      if(medias.length)
+        x += "<label class='mesach'><input type='checkbox' id='fParciales'"+(F.incluirParciales?" checked":"")+">"+
+             "Incluir "+(medias.length===1?"la mesa que quedó a medias":"las "+medias.length+" mesas que quedaron a medias")+"</label>";
+      mb.innerHTML = x;
+      const cbx=$("#fParciales");
+      if(cbx) cbx.onchange = ()=>{ F.incluirParciales = cbx.checked; save("fac",F); renderFac(); };
+    }
+  }
+
   // mapa
   let h="<tr><th rowspan='2'>Criterio</th><th rowspan='2'>Territorio</th>"+
     "<th colspan='2' style='background:var(--steel)'>WASH y Alojamiento</th>"+
     "<th colspan='2' style='background:#6E9E4A'>Protección: ICLA y Educación</th>"+
-    "<th rowspan='2' title='Peldaños de diferencia entre la nota de WASH/Alojamiento y la de Protección/ICLA/Educación en la carta de la mesa'>Distancia<br>entre sectores</th><th rowspan='2'>Lo sé por</th><th rowspan='2' title='Lectura provisional del equipo evaluador. Es una hipótesis de trabajo, no el veredicto del informe.'>Nuestra<br>lectura</th></tr>"+
+    "<th rowspan='2' title='Peldaños de diferencia entre la nota de WASH/Alojamiento y la de Protección/ICLA/Educación en la carta de la mesa'>Distancia<br>entre sectores</th><th rowspan='2'>Lo sé por</th></tr>"+
     "<tr><th class='sub' style='background:#5C7E92' title='Promedio de las notas que pusieron todas las personas de ese territorio en ese sector. G y NA no entran en el promedio. Pase el cursor por la celda para ver el reparto.'>promedio</th>"+
     "<th class='sub' style='background:#5C7E92'>la mesa</th>"+
     "<th class='sub' style='background:#7DAB5C' title='Promedio de las notas que pusieron todas las personas de ese territorio en ese sector. G y NA no entran en el promedio.'>promedio</th>"+
@@ -1932,7 +1922,7 @@ function renderFac(){
     const cs = r.cartas||[];
     const mesaTd = f => !cs.length ? "<td class='cnone'>—</td>"
       : cs.length===1 ? (cs[0][f] ? cellTd(cs[0][f]) : "<td class='cnone'>—</td>")
-      : "<td class='multi'>"+cs.map(c=>'<span class="mtag" title="Mesa '+c.nMesa+' de '+esc(r.terr)+'">m'+c.nMesa+'</span>'+
+      : "<td class='multi'>"+cs.map(c=>'<span class="mtag" title="Mesa '+c.nMesa+(c.nombre?" · "+esc(c.nombre):"")+' de '+esc(r.terr)+'">m'+c.nMesa+'</span>'+
           (c[f]?pill(c[f]):'<span class="pnone">—</span>')).join("")+"</td>";
     const fteTxt = cs.length>1
       ? cs.map(c=>'<span class="mtag">m'+c.nMesa+'</span>'+(fuenteTxt(c)||"—")+
@@ -1945,7 +1935,7 @@ function renderFac(){
        promTd(r.sect[1],nP)+mesaTd("cP")+
        "<td style='text-align:center'>"+br+"</td>"+
        "<td class='small'>"+fteTxt+"</td>"+
-       (F.sobreOpen&&r.sobre?cellTd(r.sobre.c):"<td class='cnone'>✉︎</td>")+"</tr>";
+       "</tr>";
   });
   $("#fTable").innerHTML=h;
 
@@ -1990,21 +1980,26 @@ function renderFac(){
 
   // cartas
   const cv=$("#fCartas"); cv.innerHTML="";
+  /* Acá salen todas, también las que quedaron a medias: es la pestaña donde
+     quien facilita revisa qué falta. */
   const paresTM = [];
   TERR.forEach(t=>{
-    const ms = mesasDe(t);
-    if(!ms.length) paresTM.push([t,null,0,1]);
-    else ms.forEach((mid,j)=>paresTM.push([t,mid,j+1,ms.length]));
+    const ms = mesasInfo(t), incl = mesasDe(t);
+    if(!ms.length) paresTM.push([t,null,0,1,"",true]);
+    else ms.forEach(m=>paresTM.push([t, m.mid, incl.indexOf(m.mid)+1, ms.length, m.nombre, m.completa]));
   });
-  paresTM.forEach(([t,mid,nMesa,nTotal])=>{
+  paresTM.forEach(([t,mid,nMesa,nTotal,nomMesa,completa])=>{
     const got = rows.map(r=>{
       const c = (r.cartas||[]).find(x=>x.mid===mid);
       return c ? Object.assign({}, r, {carta:c}) : null;
     }).filter(x=>x && x.terr===t);
     const d=el("div","card");
-    const titulo = nTotal>1 ? "Mesa "+nMesa+" · "+esc(t) : "Mesa · "+esc(t);
+    const etiqueta = (nTotal>1 && nMesa) ? "Mesa "+nMesa : "Mesa";
+    const titulo = etiqueta + (nomMesa ? " · "+esc(nomMesa) : "") + " · " + esc(t);
     d.appendChild(el("div",null,"<div style='font-weight:800;font-size:16px;margin-bottom:6px'>"+titulo+
-      " <span style='color:var(--mut);font-weight:600'>"+got.length+" de 6</span></div>"));
+      " <span style='color:var(--mut);font-weight:600'>"+got.length+" de 6</span>"+
+      (completa ? "" : " <span class='mesap media' style='font-size:11.5px;padding:2px 8px'>sin terminar"+
+        (F.incluirParciales?" · incluida":" · fuera del análisis")+"</span>")+"</div>"));
     if(!got.length) d.appendChild(el("p","small","Sin cartas todavía."));
     const notasT = {};
     F.votes.filter(v=>v.terr===t && v.notas).forEach(v=>{
@@ -2039,45 +2034,6 @@ function renderFac(){
     });
     cv.appendChild(d);
   });
-
-  // sobre
-  const sd=sobreData();
-  $("#sobrePaste").classList.toggle("hide", !!sd);
-  $("#sobreClosed").classList.toggle("hide", !sd || F.sobreOpen);
-  $("#sobreOpen").classList.toggle("hide", !sd || !F.sobreOpen);
-  const esDemo = !!(sd && sd.__demo);
-  const convertido = !!(sd && sd.__convertido);
-  document.querySelectorAll(".demowarn").forEach(n=>n.remove());
-  if(convertido){
-    ["#sobreClosed","#sobreOpen"].forEach(sel=>{
-      const box=$(sel); if(!box || box.classList.contains("hide")) return;
-      const w=el("div","notice demowarn");
-      w.innerHTML="<b>Sobre convertido.</b> Venía en la escala de tres niveles y se pasó a 1–5 de forma mecánica (V→4, A→3, R→2). Revísenlo antes de proyectarlo: la conversión es un supuesto, no una lectura.";
-      w.style.borderLeftColor="var(--orange)"; w.style.background="#FFF6F0";
-      box.insertBefore(w, box.firstChild);
-    });
-  }
-  if(esDemo){
-    ["#sobreClosed","#sobreOpen"].forEach(sel=>{
-      const box=$(sel); if(!box || box.classList.contains("hide")) return;
-      const w=el("div","notice demowarn");
-      w.innerHTML="<b>Sobre de ensayo.</b> Las dieciocho casillas son inventadas y dicen [DEMO]. Sirve para practicar; no se puede proyectar en la sesión.";
-      w.style.borderLeftColor="var(--orange)"; w.style.background="#FFF6F0";
-      box.insertBefore(w, box.firstChild);
-    });
-  }
-  if(sd && F.sobreOpen){
-    let s="<tr><th>Criterio</th>"+TERR.map(t=>"<th>"+esc(t)+"</th>").join("")+"</tr>";
-    CRIT.forEach(c=>{
-      s+="<tr><td class='k'>"+esc(c[0])+"</td>";
-      TERR.forEach(t=>{
-        const e=sd[c[0]+"|"+t];
-        s+="<td>"+(e?pill(e.c)+"<div class='small' style='margin-top:4px'>"+esc(e.r)+"</div>":"—")+"</td>";
-      });
-      s+="</tr>";
-    });
-    $("#fSobre").innerHTML=s;
-  }
 }
 $("#fRead").onclick = ()=>{
   const {votes, cartas, bad} = parsePaste($("#fIn").value||"");
@@ -2093,7 +2049,7 @@ $("#fRead").onclick = ()=>{
 };
 $("#fReset").onclick = ()=>{
   if(!confirm("¿Borrar lo consolidado en ESTA pantalla? La sala compartida no se toca.")) return;
-  F={votes:[],cartas:[],sobreOpen:false,sobre:F.sobre,debate:[],conclusiones:{}}; save("fac",F); renderFac();
+  F={votes:[],cartas:[],debate:[],conclusiones:{}}; save("fac",F); renderFac();
 };
 /* Vaciar la sala: borra los votos y las cartas en la base, para todos.
    Es lo que se hace entre un ensayo y el taller de verdad. */
@@ -2183,21 +2139,9 @@ $("#fVaciar").onclick = async ()=>{
   if(tecleado.trim().toLowerCase()!==sala){ toast("El nombre no coincide: no se borró nada"); return; }
   const okV = await subir("/votos", null);
   const okC = await subir("/cartas", null);
-  F={votes:[],cartas:[],sobreOpen:false,sobre:F.sobre,debate:[],conclusiones:{}}; save("fac",F); renderFac();
+  F={votes:[],cartas:[],debate:[],conclusiones:{}}; save("fac",F); renderFac();
   toast((okV&&okC) ? "Sala «"+sala+"» vacía"
                    : "No se pudo borrar en la base. Revise las reglas de Firebase.");
-};
-$("#btnSobre").onclick = ()=>{ F.sobreOpen=true; save("fac",F); renderFac(); };
-$("#sobreDemo").onclick = ()=>{
-  try{ F.sobre = JSON.parse(b64d(SOBRE_DEMO)); save("fac",F); renderFac();
-       toast("Sobre de ensayo cargado"); }catch(e){ toast("No se pudo cargar el ensayo"); }
-};
-$("#sobreLoad").onclick = ()=>{
-  const raw=($("#sobreIn").value||"").replace(/^#SOBRE\s*/i,"").trim();
-  try{
-    const o = raw.startsWith("{") ? JSON.parse(raw) : JSON.parse(b64d(raw));
-    F.sobre=o; save("fac",F); renderFac(); toast("Sobre cargado");
-  }catch(e){ toast("No se pudo leer el sobre"); }
 };
 $("#fCsv").onclick = ()=>{
   const rows=consolidate();
@@ -2220,7 +2164,7 @@ $("#fCsv").onclick = ()=>{
         k?q(k.razon):"", k?q(k.razon2):"",
         k&&k.fuente?(FLBL[k.fuente]||k.fuente):"", k&&k.fuente2?(FLBL[k.fuente2]||k.fuente2):"",
         k&&k.nodeacuerdo?"si":"", q((r.notas||[]).join("  ||  ")),
-        r.sobre?r.sobre.c:"", h?h[0]+" · "+h[1]:"",
+        h?h[0]+" · "+h[1]:"",
         F.debate.indexOf(r.crit+"|"+r.terr)>=0?"si":"",
         q(((F.conclusiones||{})[r.crit+"|"+r.terr])||"")].join(";"));
     });
@@ -2241,7 +2185,7 @@ async function saveFile(name, text){
 }
 $$(".tab").forEach(t=>t.onclick=()=>{
   $$(".tab").forEach(x=>x.setAttribute("aria-selected", x===t));
-  ["mapa","calientes","plenario","cartas","sobre"].forEach(k=>
+  ["mapa","calientes","plenario","cartas"].forEach(k=>
     $("#tab"+k[0].toUpperCase()+k.slice(1)).classList.toggle("hide", k!==t.dataset.tab));
 });
 
@@ -2258,7 +2202,7 @@ else {
   /* Escondido, pero siempre alcanzable: los enlaces «¿Alguien sin conexión?»
      lo vuelven a abrir en la mesa y en la consolidación. */
   const txt = {
-    hHero: "Antes de abrir nuestra lectura queremos la de ustedes. Primero cada quien valora su propio territorio separando dos bloques sectoriales; después las mesas escriben por qué. Todo viaja solo entre los tres pasos: nadie copia ni pega nada.",
+    hHero: "Primero cada quien valora su propio territorio separando dos bloques sectoriales; después las mesas escriben por qué. Todo viaja solo entre los tres pasos: nadie copia ni pega nada.",
     hRol1: "Mi territorio, doce casillas, siete minutos. Al terminar presiono Enviar y le llega a mi mesa.",
     hRol2: "Los tableros de nuestra mesa llegan solos. Escribimos seis cartas: una nota por sector, la razón y de dónde lo sabemos.",
     hRol3: "Para quien facilita. El mapa se arma en vivo con lo que van enviando, y de ahí sale dónde conviene conversar.",
