@@ -2571,7 +2571,7 @@ $("#fCsv").onclick = ()=>{
   /* Formato largo: una fila por carta. Si dos mesas trabajaron el mismo
      territorio, salen las dos filas, con los mismos promedios y la columna
      «Mesa» para distinguirlas. */
-  const head=["Criterio","Territorio","Mesa","Mesas_en_el_territorio","Mesa_responde_tambien_por","Promedio_WASH_Aloj","n_WA","Mesa_WASH_Aloj","Promedio_Prot_ICLA_Educ","n_PIE","Mesa_Prot_ICLA_Educ","Distancia_entre_sectores_en_peldanos","Distancia_entre_mesas_en_peldanos","Porque_compartido_o_WASH_Aloj","Porque_Prot_ICLA_Educ","Lo_se_por","Lo_se_por_Prot_ICLA_Educ","Sin_acuerdo","Notas_ronda1","Nuestra_lectura","Por_que_conversarla","Al_plenario","Lo_que_se_acordo_en_la_sala"];
+  const head=["Criterio","Territorio","Mesa","Mesas_en_el_territorio","Mesa_responde_tambien_por","Promedio_WASH_Aloj","n_WA","Mesa_WASH_Aloj","Promedio_Prot_ICLA_Educ","n_PIE","Mesa_Prot_ICLA_Educ","Distancia_entre_sectores_en_peldanos","Distancia_entre_mesas_en_peldanos","Porque_compartido_o_WASH_Aloj","Porque_Prot_ICLA_Educ","Lo_se_por","Lo_se_por_Prot_ICLA_Educ","Sin_acuerdo","Notas_ronda1","Por_que_conversarla","Al_plenario","Lo_que_se_acordo_en_la_sala"];
   const q = t => '"'+String(t||"").replace(/"/g,"'")+'"';
   const lines=[head.join(";")];
   rows.forEach(r=>{
