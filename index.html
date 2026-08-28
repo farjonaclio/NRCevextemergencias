@@ -651,7 +651,8 @@ td.multi>span.mtag:first-child{margin-left:0}
     <button class="linkish" id="fCambiar" style="margin:0">Cambiar de sala</button>
     <div class="spacer"></div>
     <button class="linkish" id="fVerMan" style="margin:0">¿Alguien sin conexión?</button>
-    <button class="btn ghost" id="fCsv">Descargar CSV</button>
+    <button class="btn ghost" id="fCsv">CSV del análisis</button>
+    <button class="btn ghost" id="fCsvVotos">CSV de los votos</button>
   </div>
   <div class="stat" id="fStat"></div>
   <div id="fMesas" class="mesasbar"></div>
@@ -2541,6 +2542,30 @@ $("#fVaciar").onclick = async ()=>{
   toast((okV&&okC) ? "Sala «"+sala+"» vacía"
                    : "No se pudo escribir en la base. Revise la conexión.");
 };
+/* Segunda base: el voto individual sin agregar, una fila por papeleta y
+   casilla. Es lo que permite rehacer cualquier promedio desde cero y ver la
+   dispersión persona por persona. Sigue siendo anónimo: la papeleta es un
+   identificador al azar, no una persona nombrada. */
+$("#fCsvVotos").onclick = ()=>{
+  const q = t => '"'+String(t||"").replace(/"/g,"'")+'"';
+  const head=["Papeleta","Territorio","Criterio","Sector","Valor","Valor_texto","En_la_escala","Nota_escrita_del_criterio"];
+  const lines=[head.join(";")];
+  F.votes.forEach((v,iv)=>{
+    const pap = "p"+String(iv+1).padStart(2,"0");
+    CRIT.forEach((c,ci)=>{
+      const nota = v.notas && v.notas[ci] ? String(v.notas[ci]) : "";
+      SECT.forEach((sec,si)=>{
+        const x = v.vals[ci*2+si] || "Z";
+        const txt = x==="Z" ? "sin marcar" : (VNOM[x] || (x==="X"?"No operó aquí":x));
+        lines.push([pap, v.terr, c[0], sec[0],
+                    (x==="Z"?"":(x==="X"?"NA":x)), q(txt),
+                    (PESO[x] ? "si" : "no"),
+                    si===0 ? q(nota) : ""].join(";"));
+      });
+    });
+  });
+  saveFile("votos_individuales_COFM2308.csv", "\ufeff"+lines.join("\n"));
+};
 $("#fCsv").onclick = ()=>{
   const rows=consolidate();
   /* Formato largo: una fila por carta. Si dos mesas trabajaron el mismo
@@ -2568,7 +2593,7 @@ $("#fCsv").onclick = ()=>{
         q(((F.conclusiones||{})[r.crit+"|"+r.terr])||"")].join(";"));
     });
   });
-  saveFile("tablero_COFM2308.csv", "﻿"+lines.join("\n"));
+  saveFile("analisis_COFM2308.csv", "﻿"+lines.join("\n"));
 };
 /* Guarda por la vía que exista: dentro del visor de Claude usa su permiso de
    descarga; en GitHub Pages o abierto en local, un enlace normal. */
