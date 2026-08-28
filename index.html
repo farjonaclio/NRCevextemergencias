@@ -2139,11 +2139,15 @@ $("#fVaciar").onclick = async ()=>{
     "No se puede deshacer.\n\nSi está seguro, escriba el nombre de la sala:");
   if(tecleado===null) return;
   if(tecleado.trim().toLowerCase()!==sala){ toast("El nombre no coincide: no se borró nada"); return; }
-  /* No se borra el nodo —la base puede tener el borrado cerrado— sino que se
-     sobrescribe con una marca que ningún lector reconoce como voto ni como
-     carta. El efecto en la sala es el mismo: queda vacía para todos. */
-  const okV = await subir("/votos", {z:1});
-  const okC = await subir("/cartas", {z:1});
+  /* La base tiene cerrado el borrado y solo acepta escribir hijo por hijo. Se
+     recorre cada uno y se sobrescribe con una marca que ningún lector reconoce
+     como voto ni como carta: la sala queda vacía para todos los dispositivos. */
+  const [vs, ks] = [await bajar("/votos"), await bajar("/cartas")];
+  let okV = true, okC = true;
+  for(const id of Object.keys(vs||{}))
+    okV = (await subir("/votos/"+id, {t:"—", v:"000000000000", c:"", n:{}})) && okV;
+  for(const tc of Object.keys(ks||{}))
+    okC = (await subir("/cartas/"+tc, {vacia:true})) && okC;
   F={votes:[],cartas:[],debate:[],conclusiones:{}}; save("fac",F); renderFac();
   toast((okV&&okC) ? "Sala «"+sala+"» vacía"
                    : "No se pudo escribir en la base. Revise la conexión.");
