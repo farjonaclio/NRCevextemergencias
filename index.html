@@ -226,6 +226,9 @@ label.fld em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:
 .plen-min{display:grid;gap:5px;margin-top:14px;padding-top:11px;border-top:1px dashed var(--line);font-size:12.5px;color:var(--gray)}
 .plen-min b{color:var(--navy)}
 .plen-con{margin-top:12px;padding:10px 13px;border-left:4px solid var(--lime);background:#F3F8EE;border-radius:0 8px 8px 0;font-size:14px;line-height:1.5}
+.plen-con textarea{width:100%;margin-top:6px;font:inherit;font-size:15px;line-height:1.45;color:var(--ink);
+  border:1.5px solid #C9D3DC;border-radius:8px;padding:9px 11px;background:#fff;resize:vertical}
+.plen-con textarea:focus{outline:0;border-color:#5C8A3C}
 .plen-con b{display:block;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:#5C8A3C;margin-bottom:3px}
 
 
@@ -1746,7 +1749,7 @@ function hotOf(cell){
     return [2,"La mesa no se puso de acuerdo",
       "El desacuerdo quedó declarado. Vale la pena oírlo entero: dos lecturas conviviendo son un dato, no un empate."];
   if(salto>=1)
-    return [3,"La mesa se movió "+num(salto)+" peldaños respecto del promedio de su gente",
+    return [3,"La mesa se movió "+num(salto)+(salto===1?" peldaño":" peldaños")+" respecto del promedio de su gente",
       "Lo que pusieron solos y lo que acordaron juntos no coincide del todo. Se registra; se discute solo si sobra tiempo."];
 
   /* 2 · Lo que conviene mirar antes de redactar. */
@@ -1949,8 +1952,13 @@ function contenidoPlenario(rows){
       if((r.notas||[]).length)
         h += '<div class="notacard"><b>'+r.notas.length+' nota'+(r.notas.length===1?"":"s")+
              ' de la Ronda 1</b>'+r.notas.map(x=>"«"+esc(x)+"»").join("<br>")+'</div>';
-      const con = (F.conclusiones||{})[r.crit+"|"+r.terr];
-      if(con) h += '<div class="plen-con"><b>Lo que se acordó en la sala</b>'+esc(con)+'</div>';
+      /* Editable: en la Ronda 4 la pantalla está proyectada y hay que poder
+         escribir sin salir de ella. */
+      const clv = r.crit+"|"+r.terr;
+      const con = (F.conclusiones||{})[clv] || "";
+      h += '<div class="plen-con"><b>Lo que se acordó en la sala</b>'+
+           '<textarea class="proycon crece" data-k="'+esc(clv)+'" rows="2" '+
+           'placeholder="Se escribe mientras se dice. Esto es lo que se lleva al informe.">'+esc(con)+'</textarea></div>';
       h += '</section>';
     });
   }
@@ -2291,11 +2299,24 @@ function cambiarDeSala(){
 $("#fCambiar").onclick = cambiarDeSala;
 $("#fProy").onclick = ()=>{
   const ov = $("#proy");
-  ov.querySelector(".proybody").innerHTML = contenidoPlenario(consolidate());
+  const cuerpo = ov.querySelector(".proybody");
+  cuerpo.innerHTML = contenidoPlenario(consolidate());
+  /* Lo que se escriba acá se guarda igual que en la pantalla de trabajo. */
+  cuerpo.querySelectorAll("textarea.proycon").forEach(ta=>{
+    const crecer = ()=>{ ta.style.height="auto"; ta.style.height=Math.max(ta.scrollHeight,64)+"px"; };
+    ta.oninput = ()=>{
+      F.conclusiones = F.conclusiones || {};
+      const v = ta.value;
+      if(v.trim()) F.conclusiones[ta.dataset.k] = v; else delete F.conclusiones[ta.dataset.k];
+      save("fac",F); crecer();
+    };
+    crecer();
+  });
   ov.classList.remove("hide"); document.body.style.overflow="hidden";
   ov.scrollTop = 0;
 };
-$("#proyCerrar").onclick = ()=>{ $("#proy").classList.add("hide"); document.body.style.overflow=""; };
+/* Al cerrar la proyección la pantalla de trabajo se pone al día con lo escrito. */
+$("#proyCerrar").onclick = ()=>{ $("#proy").classList.add("hide"); document.body.style.overflow=""; renderFac(); };
 document.addEventListener("keydown", e=>{ if(e.key==="Escape" && !$("#proy").classList.contains("hide")) $("#proyCerrar").click(); });
 
 $("#fVerMan").onclick = ()=>{ const d=$("#fMan"); d.classList.remove("hide"); d.open=true; d.scrollIntoView({block:"center",behavior:"smooth"}); };
