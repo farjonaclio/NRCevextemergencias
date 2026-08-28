@@ -531,7 +531,7 @@ td.multi>span.mtag:first-child{margin-left:0}
   <h1 id="pTitle">¿En qué territorio trabaja usted?</h1>
 
   <div id="pTerr">
-    <p class="lead">Valore únicamente el territorio en el que trabaja. Si trabaja en más de uno, escoja aquel del que más le consta.</p>
+    <p class="lead">Valore únicamente el territorio en el que trabaja. Si trabaja en más de uno, escoja aquel del que más le consta. Si su trabajo es desde la oficina nacional y no en un territorio, elija <b>Of. Nacional</b>.</p>
     <div class="chips" id="pTerrChips"></div>
     <div class="notice"><b>Ojo con NA.</b> Si un sector no operó en su territorio, esa casilla va <b>NA</b> y no 1: es un hecho del diseño del proyecto, no una nota baja. Quien facilita les dirá al empezar qué operó en cada territorio.</div>
     <div class="nav"><button class="btn" id="pStart" disabled>Empezar</button>
@@ -546,7 +546,7 @@ td.multi>span.mtag:first-child{margin-left:0}
     <details class="ayuda" id="pAyuda"><summary>¿Qué quiere decir este criterio?</summary>
       <p id="pAyudaDef"></p><p id="pAyudaQ"></p></details>
     <div id="pSectors"></div>
-    <details id="pNotaBox"><summary>Dejar una nota sobre este criterio (opcional)</summary>
+    <details id="pNotaBox" open><summary>Una nota sobre este criterio (opcional)</summary>
       <textarea id="pNota" rows="3" class="crece" placeholder="Lo que no cabe en un número: un ejemplo, un matiz, una pregunta para la mesa."></textarea>
       <p class="small" id="pNotaAviso" style="margin:4px 0 0">Su mesa la va a ver junto a esta casilla. No lleva su nombre.</p>
     </details>
@@ -767,11 +767,11 @@ const CRIT = [
    códigos —P, N, C, H—, así que cambiar de una a otra no pierde lo ya escrito:
    «Cauca» y «Cauca y Chocó» son el mismo nodo C. */
 const SETUPS = {
-  separados:  { rotulo:"Cauca y Chocó por separado", terr:[["P","Putumayo"],["N","Norte de Santander"],["C","Cauca"],["H","Chocó"]] },
-  caucachoco: { rotulo:"Cauca y Chocó en uno solo",  terr:[["P","Putumayo"],["N","Norte de Santander"],["C","Cauca y Chocó"]] },
-  cauca:      { rotulo:"Sin Chocó",                  terr:[["P","Putumayo"],["N","Norte de Santander"],["C","Cauca"]] }
+  separados:  { rotulo:"Cauca y Chocó por separado", terr:[["P","Putumayo"],["N","Norte de Santander"],["C","Cauca"],["H","Chocó"],["O","Of. Nacional"]] },
+  caucachoco: { rotulo:"Cauca y Chocó en uno solo",  terr:[["P","Putumayo"],["N","Norte de Santander"],["C","Cauca y Chocó"],["O","Of. Nacional"]] },
+  cauca:      { rotulo:"Sin Chocó",                  terr:[["P","Putumayo"],["N","Norte de Santander"],["C","Cauca"],["O","Of. Nacional"]] }
 };
-const TC_COLOR = {P:"var(--steel)", N:"var(--crimson)", C:"#6E9E4A", H:"var(--orange)"};
+const TC_COLOR = {P:"var(--steel)", N:"var(--crimson)", C:"#6E9E4A", H:"var(--orange)", O:"#7A6AA8"};
 let SETUP = "separados";
 let TERR = [], TCODE = {}, TCOLOR = {}, TFROM = {};
 function aplicarSetup(id){
@@ -1142,10 +1142,11 @@ function goStep(){
   });
   const nb=$("#pNotaBox"), na=$("#pNota");
   na.value = P.notas[i] || "";
-  nb.open = !!na.value;
+  /* El espacio de comentario va abierto: si hay que descubrirlo, nadie escribe. */
+  nb.open = true;
   nb.querySelector("summary").textContent = na.value
     ? "Su nota sobre "+CRIT[i][0]
-    : "Dejar una nota sobre "+CRIT[i][0]+" (opcional)";
+    : "Una nota sobre "+CRIT[i][0]+" (opcional)";
   na.oninput = ()=>{
     const v = na.value.trim();
     if(v) P.notas[i] = na.value; else delete P.notas[i];
@@ -1233,8 +1234,13 @@ const COB = {
   "Norte de Santander":  [["WASH / Alojamiento", ""], ["", ""]],
   "Cauca":               [["Alojamiento", "WASH no operó aquí"], ["", ""]],
   "Cauca y Chocó":       [["Alojamiento", "WASH no operó en Cauca"], ["", ""]],
-  "Chocó":               [["", ""], ["", ""]]
+  "Chocó":               [["", ""], ["", ""]],
+  "Of. Nacional":        [["", ""], ["", ""]]
 };
+/* Nombre corto para las barras de conteo: «Of. Nacional» no se puede
+   abreviar por la primera palabra («Of.») sin quedar ilegible. */
+const TSHORT = {P:"Putumayo", N:"Norte", C:"Cauca", H:"Chocó", O:"Of. Nac."};
+const corto = t => TSHORT[TCODE[t]] || String(t).split(" ")[0];
 const cobTxt = (terr, si) => {
   const c = COB[terr] && COB[terr][si];
   if(!c || (!c[0] && !c[1])) return "";
@@ -2152,16 +2158,19 @@ function sincronizarFac(){
 function renderFac(){
   const rows=consolidate();
   const nv=F.votes.length;
-  const porT = TERR.map(t=>t.split(" ")[0]+" "+F.votes.filter(v=>v.terr===t).length).join(" · ");
+  const porT = TERR.map(t=>corto(t)+" "+F.votes.filter(v=>v.terr===t).length).join(" · ");
+  /* El denominador de cartas cuenta solo los territorios donde hubo votacion:
+     un territorio sin gente no debe inflar el total. */
+  const tAct = TERR.filter(t=>F.votes.some(v=>v.terr===t)).length;
   const nbr = rows.filter(r=>r.dist>=3).length;
   /* Solo cuentan las cartas que entraron al análisis. */
   const nc2 = new Set(rows.flatMap(r=>(r.cartas||[]).map(()=>r.crit+"|"+r.terr))).size;
   $("#fStat").innerHTML =
     '<div style="--sc:var(--steel)"><b>'+nv+'</b><span>Personas que votaron</span></div>'+
-    '<div style="--sc:var(--crimson)"><b>'+nc2+' <span style="font-size:14px;color:var(--mut)">/ '+(6*TERR.length)+'</span></b><span>Cartas</span></div>'+
+    '<div style="--sc:var(--crimson)"><b>'+nc2+' <span style="font-size:14px;color:var(--mut)">/ '+(6*tAct)+'</span></b><span>Cartas</span></div>'+
     '<div style="--sc:var(--orange)"><b>'+nbr+'</b><span>Sectores muy separados</span></div>'+
     '<div style="--sc:#6E9E4A;min-width:230px"><b style="font-size:15px;line-height:2.1">'+
-      TERR.map(t=>'<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:'+TCOLOR[t]+';margin-right:5px"></span>'+esc(t.split(" ")[0])+" "+F.votes.filter(v=>v.terr===t).length).join(" · ")+
+      TERR.map(t=>'<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:'+TCOLOR[t]+';margin-right:5px"></span>'+esc(corto(t))+" "+F.votes.filter(v=>v.terr===t).length).join(" · ")+
     '</b><span>Votos por territorio</span></div>';
 
   /* Quiénes escribieron y quiénes quedaron a medias. Es lo primero que hay
