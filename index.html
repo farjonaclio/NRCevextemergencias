@@ -1176,7 +1176,9 @@ function limpiarMesa(terrAnterior){
   save("mesa",M);
   const ind=$("#mSync"); if(ind){ ind.textContent=""; ind.className="small"; }
   $("#mOut").classList.add("hide"); $("#mOutLbl").classList.add("hide");
-  if(haySync && terrAnterior && habiaCartas) subir("/cartas/"+nodoCartas(terrAnterior), null);
+    /* Misma razón: se marca el nodo como vacío en lugar de borrarlo, para que
+     las cartas abandonadas no sigan contando como una mesa. */
+  if(haySync && terrAnterior && habiaCartas) subir("/cartas/"+nodoCartas(terrAnterior), {vacia:true});
 }
 let pararOtras = ()=>{};
 /* Puede haber más de una mesa por territorio y no es un problema: cada una
@@ -2137,11 +2139,14 @@ $("#fVaciar").onclick = async ()=>{
     "No se puede deshacer.\n\nSi está seguro, escriba el nombre de la sala:");
   if(tecleado===null) return;
   if(tecleado.trim().toLowerCase()!==sala){ toast("El nombre no coincide: no se borró nada"); return; }
-  const okV = await subir("/votos", null);
-  const okC = await subir("/cartas", null);
+  /* No se borra el nodo —la base puede tener el borrado cerrado— sino que se
+     sobrescribe con una marca que ningún lector reconoce como voto ni como
+     carta. El efecto en la sala es el mismo: queda vacía para todos. */
+  const okV = await subir("/votos", {z:1});
+  const okC = await subir("/cartas", {z:1});
   F={votes:[],cartas:[],debate:[],conclusiones:{}}; save("fac",F); renderFac();
   toast((okV&&okC) ? "Sala «"+sala+"» vacía"
-                   : "No se pudo borrar en la base. Revise las reglas de Firebase.");
+                   : "No se pudo escribir en la base. Revise la conexión.");
 };
 $("#fCsv").onclick = ()=>{
   const rows=consolidate();
